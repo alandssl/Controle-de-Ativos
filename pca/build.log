@@ -1,0 +1,48 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------------< com.pca:pca >-----------------------------
+[INFO] Building pca 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.1:clean (default-clean) @ pca ---
+[INFO] Deleting T:\Projetos TI\PCA\Controle-Ativos-OFICIAL\pca\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ pca ---
+[INFO] Copying 3 resources from src\main\resources to target\classes
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ pca ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 44 source files with javac [debug parameters release 21] to target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /T:/Projetos TI/PCA/Controle-Ativos-OFICIAL/pca/src/main/java/com/pca/service/EquipamentoService.java:[35,22] cannot find symbol
+  symbol:   method setEquipamento(com.pca.model.Equipamento)
+  location: variable movimento of type com.pca.model.Movimento
+[ERROR] /T:/Projetos TI/PCA/Controle-Ativos-OFICIAL/pca/src/main/java/com/pca/service/EquipamentoService.java:[37,22] cannot find symbol
+  symbol:   method setColaborador(com.pca.model.Colaborador)
+  location: variable movimento of type com.pca.model.Movimento
+[INFO] 2 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  11.297 s
+[INFO] Finished at: 2026-01-08T11:00:16-03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.0:compile (default-compile) on project pca: Compilation failure: Compilation failure: 
+[ERROR] /T:/Projetos TI/PCA/Controle-Ativos-OFICIAL/pca/src/main/java/com/pca/service/EquipamentoService.java:[35,22] cannot find symbol
+[ERROR]   symbol:   method setEquipamento(com.pca.model.Equipamento)
+[ERROR]   location: variable movimento of type com.pca.model.Movimento
+[ERROR] /T:/Projetos TI/PCA/Controle-Ativos-OFICIAL/pca/src/main/java/com/pca/service/EquipamentoService.java:[37,22] cannot find symbol
+[ERROR]   symbol:   method setColaborador(com.pca.model.Colaborador)
+[ERROR]   location: variable movimento of type com.pca.model.Movimento
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

@@ -2,8 +2,12 @@ package com.pca.model;
 
 import java.time.LocalDateTime;
 
+import com.pca.enums.AnexoStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -44,6 +48,13 @@ public class Movimento {
     @ManyToOne
     @JoinColumn(name = "id_ativo")
     private Equipamento equipamento;
+
+    @Column(name="cod_movimento")
+    private String codMovimento;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "anexo", nullable = false)
+    private AnexoStatus anexo;
 
     @ManyToOne
     @JoinColumn(name = "id_colaborador")
@@ -136,7 +147,7 @@ public class Movimento {
         return equipamento;
     }
 
-    public void setEquipamento(Equipamento equipamento) {
+    public void setIdEquipamento(Equipamento equipamento) {
         this.equipamento = equipamento;
     }
 
@@ -144,7 +155,7 @@ public class Movimento {
         return colaborador;
     }
 
-    public void setColaborador(Colaborador colaborador) {
+    public void setIdColaborador(Colaborador colaborador) {
         this.colaborador = colaborador;
     }
 
@@ -155,4 +166,14 @@ public class Movimento {
     public void setSetor(String setor) {
         this.setor = setor;
     }
+
+    public String getCodMovimento() {
+        return codMovimento;
+    }
+
+    public void setCodMovimento(String codMovimento) {
+        this.codMovimento = codMovimento;
+    }
+
+
 }

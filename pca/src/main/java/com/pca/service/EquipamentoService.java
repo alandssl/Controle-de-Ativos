@@ -32,9 +32,9 @@ public class EquipamentoService {
             movimento.setTipoMovimento("SAIDA");
             movimento.setObservacao("Entrega inicial ao cadastrar");
             movimento.setDataMovimento(java.time.LocalDateTime.now());
-            movimento.setEquipamento(salvo);
+            movimento.setIdEquipamento(salvo);
             movimento.setTipo(salvo.getTipoEquipamento());
-            movimento.setColaborador(colaborador);
+            movimento.setIdColaborador(colaborador);
             // movimento.setSetor(colaborador.getSetor()); // Optional based on model
 
             movimentoRepository.save(movimento);

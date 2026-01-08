@@ -2,73 +2,100 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useSearchParams } from 'next/navigation';
 import { useNotifications } from '@/providers/notification-provider';
 import { Ativo, Colaborador } from '@/types';
+import { api, ENDPOINTS } from '@/services/api';
 
 export default function NewMovementPage() {
-  const searchParams = useSearchParams();
-  const defaultType = searchParams.get('type') === 'entry' ? 'Entrada' : 'Saida';
-  const [loading, setLoading] = useState(false);
-  const [ativos, setAtivos] = useState<Ativo[]>([]);
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
-
+  const router = useRouter();
   const { addNotification } = useNotifications();
 
-  // ========================
-  // BUSCA ATIVOS E COLABORADORES
-  // ========================
+  const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // Estados para os dados
+  const [ativos, setAtivos] = useState<Ativo[]>([]);
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
+
+  // Estados do formulário
+  const [formData, setFormData] = useState({
+    tipo_movimento: 'Saida',
+    ativo: '',
+    colaborador: '',
+    data: '',
+    valor: '',
+    obs: ''
+  });
+
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAllData = async () => {
       try {
-        const [ativosRes, colabRes] = await Promise.all([
-          fetch('http://localhost:8080/api/equipamentos'),
-          fetch('http://localhost:8080/api/colaboradores'),
+        const [ativosResponse, colabResponse] = await Promise.all([
+          api.get(ENDPOINTS.ASSETS),
+          api.get(ENDPOINTS.EMPLOYEES)
         ]);
 
-        if (ativosRes.ok) setAtivos(await ativosRes.json());
-        if (colabRes.ok) setColaboradores(await colabRes.json());
+        setAtivos(ativosResponse.content ?? ativosResponse);
+        setColaboradores(colabResponse.content ?? colabResponse);
+
       } catch (error) {
-        console.error('Erro ao buscar dados:', error);
+        console.error('Erro ao carregar dados:', error);
+        addNotification({
+          title: 'Erro',
+          message: 'Erro ao carregar os dados.',
+          type: 'error'
+        });
       } finally {
         setDataLoading(false);
       }
     };
 
-    fetchData();
+    fetchAllData();
   }, []);
 
-  // ========================
-  // SUBMIT (POST)
-  // ========================
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+
+    // Se for o input de valor, garantir que é número ou string válida
+    let updatedData = { ...formData, [name]: value };
+
+    // Regra de Negócio: 
+    // - Sem colaborador (Estoque) -> Entrada (Devolução)
+    // - Com colaborador -> Saida (Entrega/Transferência)
+    if (name === 'colaborador') {
+      if (value === '') {
+        // Se ficou vazio, não faz nada automático pois pode ser o checkbox controlando
+      } else {
+        // Se o usuário selecionou alguém manualmente, com certeza é Saída
+        updatedData.tipo_movimento = 'Saida';
+      }
+    }
+
+    setFormData(updatedData);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData(e.target as HTMLFormElement);
-
-
-    const selectedAssetId = Number(formData.get('ativo'));
-    const selectedColabId = Number(formData.get('colaborador'));
+    const selectedAssetId = Number(formData.ativo);
+    const selectedColabId = Number(formData.colaborador);
 
     const selectedAsset = ativos.find(a => a.id === selectedAssetId);
     const selectedColab = colaboradores.find(c => c.id === selectedColabId);
 
-
-
     const payload = {
-      tipoMovimento: formData.get('tipo_movimento'),
-      dataMovimento: formData.get('data'),
-      observacao: formData.get('obs'),
-      valor: Number(formData.get('valor')),
-      // Enviando Tipo
+      tipoMovimento: formData.tipo_movimento,
+      dataMovimento: formData.data ? formData.data : new Date().toISOString(), // Se não preencher, usa data atual
+      observacao: formData.obs,
+      valor: formData.valor ? Number(formData.valor) : 0,
       tipo: { tipo: selectedAsset?.tipoEquipamento?.tipo || 'Outros' },
       idEquipamento: {
         id: selectedAssetId
@@ -76,44 +103,35 @@ export default function NewMovementPage() {
       idColaborador: {
         id: selectedColabId
       },
-      setor: selectedColab?.setor // Enviar o setor como texto
+      setor: selectedColab?.setor
     };
 
-
-
     try {
-      const response = await fetch('http://localhost:8080/api/movimentos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error('Erro ao salvar');
+      await api.post(ENDPOINTS.MOVEMENTS, payload);
 
       addNotification({
         title: 'Sucesso',
-        message: 'Movimentação registrada com sucesso.',
-        type: 'success',
+        message: 'Movimentação criada com sucesso.',
+        type: 'success'
       });
 
-      window.location.href = '/movements';
+      router.push('/movements');
     } catch (error) {
-      console.error(error);
+      console.error('Erro ao criar:', error);
       addNotification({
         title: 'Erro',
-        message: 'Erro ao registrar movimentação.',
-        type: 'error',
+        message: 'Não foi possível criar a movimentação.',
+        type: 'error'
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // ========================
-  // RENDER
-  // ========================
+  if (dataLoading) {
+    return <div className="p-8 text-center">Carregando dados...</div>;
+  }
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center gap-4">
@@ -143,14 +161,25 @@ export default function NewMovementPage() {
               <select
                 id="tipo_movimento"
                 name="tipo_movimento"
-                defaultValue={defaultType}
-                className="w-full border rounded px-3 py-2"
+                value={formData.tipo_movimento}
+                onChange={handleChange}
+                disabled={true}
+                className="w-full border rounded px-3 py-2 disabled:bg-muted disabled:text-muted-foreground"
               >
                 <option value="Saida">Entrega (Saída)</option>
                 <option value="Entrada">Devolução (Entrada)</option>
               </select>
+              {formData.colaborador === '' && (
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  * Devoluções para o estoque são sempre entradas.
+                </p>
+              )}
+              {formData.colaborador !== '' && (
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  * Entregas para colaboradores são sempre saídas.
+                </p>
+              )}
             </div>
-
 
             {/* ATIVO */}
             <div className="space-y-2">
@@ -159,47 +188,95 @@ export default function NewMovementPage() {
                 id="ativo"
                 name="ativo"
                 required
-                disabled={dataLoading}
-                className="w-full border rounded px-3 py-2"
+                value={formData.ativo}
+                onChange={handleChange}
+                className="w-full border rounded px-3 py-2 bg-muted/50"
+
               >
-                <option value="">
-                  {dataLoading ? 'Carregando ativos...' : 'Selecione o ativo...'}
-                </option>
+                <option value="">Selecione o ativo...</option>
                 {ativos.map(asset => (
                   <option key={asset.id} value={asset.id}>
                     {asset.patrimonio} - {asset.modelo}
                   </option>
                 ))}
               </select>
+              <p className="text-[10px] text-muted-foreground italic">
+                * Se selecionar um ativo, verifique se o status dele é compatível.
+              </p>
             </div>
 
             {/* COLABORADOR */}
-            <div className="space-y-2">
-              <Label htmlFor="colaborador">Colaborador</Label>
-              <select
-                id="colaborador"
-                name="colaborador"
-                required
-                disabled={dataLoading}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">
-                  {dataLoading
-                    ? 'Carregando colaboradores...'
-                    : 'Selecione o colaborador...'}
-                </option>
-                {colaboradores.map(colab => (
-                  <option key={colab.id} value={colab.id}>
-                    {colab.nome} - {colab.setor}
-                  </option>
-                ))}
-              </select>
+            <div className="space-y-4 border p-4 rounded-md">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="devolucao"
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  checked={
+                    // Checkbox marcado APENAS se o colaborador selecionado for explicitamente o 'ESTOQUE TI'
+                    colaboradores.find(c => c.id.toString() === formData.colaborador)?.nome.toUpperCase() === 'ESTOQUE TI'
+                  }
+                  // Melhorar lógica para "New": checkbox deve ser explicitamente marcado pelo usuário para ativar modo estoque.
+                  // Mas aqui estamos reaproveitando a lógica do edit.
+                  // Vamos usar uma verificação mais robusta: se o ID selecionado é o do estoque.
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+
+                    // Buscar ID do Colaborador 'ESTOQUE TI'
+                    const stockColab = colaboradores.find(c =>
+                      c.nome.toUpperCase().includes('ESTOQUE') ||
+                      c.nome.toUpperCase().includes('TI')
+                    );
+
+                    const exactStock = colaboradores.find(c => c.nome.toUpperCase() === 'ESTOQUE TI');
+                    const targetStockId = exactStock?.id?.toString() || stockColab?.id?.toString() || '';
+
+                    setFormData(prev => ({
+                      ...prev,
+                      colaborador: isChecked ? targetStockId : '', // Se desmarcar, limpa para forçar escolha
+                      tipo_movimento: isChecked ? 'Entrada' : 'Saida'
+                    }));
+                  }}
+                />
+                <Label htmlFor="devolucao" className="font-medium cursor-pointer">
+                  Devolução para Estoque TI
+                </Label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="colaborador" className={formData.colaborador === '' ? 'text-muted-foreground' : ''}>
+                  Colaborador (Destino)
+                </Label>
+                <select
+                  id="colaborador"
+                  name="colaborador"
+                  disabled={
+                    colaboradores.find(c => c.id.toString() === formData.colaborador)?.nome.toUpperCase() === 'ESTOQUE TI'
+                  }
+                  value={formData.colaborador}
+                  onChange={handleChange}
+                  className="w-full border rounded px-3 py-2 disabled:bg-muted disabled:text-muted-foreground"
+                >
+                  <option value="">Selecione o colaborador...</option>
+                  {colaboradores.map(colab => (
+                    <option key={colab.id} value={colab.id}>
+                      {colab.nome} - {colab.setor}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* DATA */}
             <div className="space-y-2">
               <Label htmlFor="data">Data</Label>
-              <Input id="data" name="data" type="datetime-local" />
+              <Input
+                id="data"
+                name="data"
+                type="datetime-local"
+                value={formData.data}
+                onChange={handleChange}
+              />
             </div>
 
             {/* OBS e VALOR */}
@@ -212,6 +289,8 @@ export default function NewMovementPage() {
                   type="number"
                   step="0.01"
                   placeholder="0.00"
+                  value={formData.valor}
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -222,6 +301,8 @@ export default function NewMovementPage() {
                 id="obs"
                 name="obs"
                 placeholder="Detalhes sobre o estado do equipamento ou motivo..."
+                value={formData.obs}
+                onChange={handleChange}
               />
             </div>
 

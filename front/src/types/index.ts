@@ -64,6 +64,8 @@ export interface Movimentacao {
   tipoMovimento?: string;
   dataMovimento: string;
   observacao?: string;
+  setor?: string;
+  anexo?: string;
 
   idEquipamento?: {
     id: number;

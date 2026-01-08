@@ -1,13 +1,15 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, History, User, Laptop, Calendar, Info, Edit } from 'lucide-react';
+import { ArrowLeft, History, User, Laptop, Info, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { mockMovimentacoes, mockAtivos, mockColaboradores } from '@/lib/data';
+import { api, ENDPOINTS } from '@/services/api';
+import { Movimentacao, Ativo, Colaborador } from '@/types';
+import { useReactToPrint } from 'react-to-print';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -16,18 +18,88 @@ interface PageProps {
 export default function MovementDetailsPage({ params }: PageProps) {
     const resolvedParams = use(params);
     const movId = parseInt(resolvedParams.id);
-    const movement = mockMovimentacoes.find(m => m.id === movId);
+
+    // Estados para dados reais
+    const [movement, setMovement] = useState<Movimentacao | null>(null);
+    const [asset, setAsset] = useState<Ativo | null>(null);
+    const [collaborator, setCollaborator] = useState<Colaborador | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    // Ref para impressão
+    const printRef = useRef<HTMLDivElement>(null);
+
+    // Função de Imprimir
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: `Comprovante_Movimentacao_${movId}`,
+    });
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Busca a movimentação
+                const movData = await api.get(`${ENDPOINTS.MOVEMENTS}/${movId}`);
+                if (!movData) {
+                    setLoading(false);
+                    return;
+                }
+                setMovement(movData);
+
+                // Busca detalhes relacionados se existirem IDs na movimentação
+                // Nota: A API de movimentos já traz alguns dados alinhados, mas vamos garantir
+                // Se a API retornar objeto aninhado completo, usamos ele.
+                if (movData.idEquipamento) {
+                    // Se for objeto completo
+                    if (typeof movData.idEquipamento === 'object') {
+                        setAsset(movData.idEquipamento);
+                    } else {
+                        // Se for só ID (dependendo da API), buscaria
+                        const assetData = await api.get(`${ENDPOINTS.ASSETS}/${movData.idEquipamento}`);
+                        setAsset(assetData);
+                    }
+                }
+
+                if (movData.idColaborador) {
+                    if (typeof movData.idColaborador === 'object') {
+                        setCollaborator(movData.idColaborador);
+                    } else {
+                        const colabData = await api.get(`${ENDPOINTS.EMPLOYEES}/${movData.idColaborador}`);
+                        setCollaborator(colabData);
+                    }
+                }
+
+            } catch (error) {
+                console.error("Erro ao buscar detalhes:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [movId]);
+
+    if (loading) {
+        return <div className="p-8 text-center text-muted-foreground">Carregando detalhes...</div>;
+    }
 
     if (!movement) {
         notFound();
     }
 
-    const asset = mockAtivos.find(a => a.id === movement.id_ativo);
-    const collaborator = movement.id_colaborador ? mockColaboradores.find(c => c.id === movement.id_colaborador) : null;
+    // Lógica visual baseada nos dados
+    const isSaida = movement.tipoMovimento === 'Saida' || (!movement.idColaborador && movement.tipoMovimento !== 'Entrada');
+    // Ajuste da lógica de exibição conforme regras anteriores:
+    // Se tem colaborador -> Saida/Entrega
+    // Se não tem (ou é estoque) -> Entrada/Devolução
+    // Vamos confiar no 'tipoMovimento' que vem do banco, mas fallback para lógica visual se precisar
+
+    const displayType = movement.tipoMovimento === 'Saida' ? 'Entrega de Equipamento' : 'Devolução de Equipamento';
+    const displayCollaboratorName = collaborator ? collaborator.nome : 'ESTOQUE TI';
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            {/* Header com Navegação e Botão de Imprimir */}
+            <div className="flex items-center justify-between print:hidden">
                 <div className="flex items-center gap-4">
                     <Link href="/movements">
                         <Button variant="ghost" size="icon">
@@ -39,96 +111,164 @@ export default function MovementDetailsPage({ params }: PageProps) {
                             <History className="h-6 w-6" />
                             Detalhes da Movimentação #{movement.id}
                         </h1>
-                        <p className="text-sm text-muted-foreground">Registro histórico de alteração de posse ou localização.</p>
                     </div>
                 </div>
-                <Link href={`/movements/${movId}/edit`}>
-                    <Button>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Editar Registro
-                    </Button>
-                </Link>
+                <Button onClick={() => handlePrint && handlePrint()}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Imprimir Comprovante
+                </Button>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-sm font-medium flex items-center gap-2">
-                            <Info className="h-4 w-4" />
-                            Informações Gerais
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex justify-between items-center border-b pb-2">
-                            <span className="text-sm text-muted-foreground">Tipo de Operação</span>
-                            <Badge variant={movement.tipo_desc === 'Saida' ? 'default' : 'secondary'}>
-                                {movement.tipo_desc === 'Saida' ? 'Entrega (Saída)' : 'Devolução (Entrada)'}
-                            </Badge>
-                        </div>
-                        <div className="flex justify-between items-center border-b pb-2">
-                            <span className="text-sm text-muted-foreground">Data e Hora</span>
-                            <div className="text-right">
-                                <p className="text-sm font-medium">{new Date(movement.data).toLocaleDateString()}</p>
-                                <p className="text-xs text-muted-foreground">{new Date(movement.data).toLocaleTimeString()}</p>
-                            </div>
-                        </div>
-                        <div className="space-y-2 pt-2">
-                            <span className="text-sm text-muted-foreground">Observações / Motivo</span>
-                            <div className="p-3 bg-muted/50 rounded-md text-sm border italic">
-                                {movement.obs || 'Nenhuma observação registrada.'}
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+            {/* ÁREA IMPRIMÍVEL */}
+            <div className="bg-white p-8 rounded-lg border shadow-sm print:shadow-none print:border-none" ref={printRef}>
 
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                <Laptop className="h-4 w-4" />
-                                Ativo Envolvido
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
+                {/* Cabeçalho do Comprovante */}
+                <div className="flex items-center justify-between bg-gray-50 p-6 rounded-lg border mb-6 print:bg-transparent print:border-gray-300">
+                    <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center print:border print:border-gray-200">
+                            <Laptop className="h-6 w-6 text-primary print:text-black" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900">Termo de Movimentação</h2>
+                            <p className="text-sm text-gray-500">Controle de Ativos de TI</p>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <Badge variant="outline" className="mb-1 text-lg px-3 py-1 font-bold border-2">
+                            {displayType.toUpperCase()}
+                        </Badge>
+                        <p className="text-xs text-gray-400">ID: {movement.id}</p>
+                    </div>
+                </div>
+
+                <div className="grid gap-6">
+                    {/* Seção 1: Dados da Operação */}
+                    <section>
+                        <div className="bg-gray-50 p-6 rounded-lg border print:bg-transparent print:border-gray-300">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-6 flex items-center gap-2">
+                                <Info className="h-4 w-4" /> Dados da Operação
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="text-sm">
+                                    <span className="font-semibold text-gray-600">Data e Hora:</span>&nbsp;
+                                    <span className="text-gray-900">
+                                        {new Date(movement.dataMovimento).toLocaleDateString()} às {new Date(movement.dataMovimento).toLocaleTimeString()}
+                                    </span>
+                                </div>
+                                <div className="text-sm">
+                                    <span className="font-semibold text-gray-600">Status:</span>&nbsp;
+                                    <span className="text-gray-900">Concluído</span>
+                                </div>
+
+                                <div className="text-sm">
+                                    <span className="font-semibold text-gray-600">Origem:</span>&nbsp;
+                                    <span className="text-gray-900">
+                                        {movement.tipoMovimento === 'Saida' ? 'ESTOQUE TI' : (movement.setor || 'Usuário / Externo')}
+                                    </span>
+                                </div>
+                                <div className="text-sm">
+                                    <span className="font-semibold text-gray-600">Destino:</span>&nbsp;
+                                    <span className="text-gray-900">
+                                        {movement.tipoMovimento === 'Saida' ? (collaborator?.nome || 'Destinatário') : 'ESTOQUE TI'}
+                                    </span>
+                                </div>
+
+                                <div className="col-span-1 md:col-span-2 text-sm">
+                                    <span className="font-semibold text-gray-600">Observações:</span>&nbsp;
+                                    <span className="text-gray-900 italic">
+                                        {movement.observacao || 'Nenhuma observação registrada.'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                {/* Seção 2: Ativo e Responsável */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Ativo */}
+                    <section className="flex flex-col h-full">
+                        <div className="border rounded-lg p-6 h-full print:border-gray-300">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-6 flex items-center gap-2">
+                                <Laptop className="h-4 w-4" /> Equipamento
+                            </h3>
                             {asset ? (
-                                <Link href={`/assets/${asset.id}`} className="group block">
-                                    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors border">
-                                        <div>
-                                            <p className="font-bold text-sm group-hover:text-primary transition-colors">{asset.patrimonio}</p>
-                                            <p className="text-xs text-muted-foreground">{asset.modelo}</p>
-                                        </div>
-                                        <Badge variant="outline">{asset.status_desc}</Badge>
+                                <div className="space-y-3 text-sm">
+                                    <div>
+                                        <span className="font-semibold text-gray-600">Patrimônio:</span>&nbsp;
+                                        <span className="font-bold text-gray-900 text-lg">{asset.patrimonio}</span>
                                     </div>
-                                </Link>
+                                    <div>
+                                        <span className="font-semibold text-gray-600">Modelo:</span>&nbsp;
+                                        <span className="text-gray-900">{asset.modelo}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-semibold text-gray-600">Fabricante:</span>&nbsp;
+                                        <span className="text-gray-900">{asset.fabricante || '-'}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-semibold text-gray-600">Tipo:</span>&nbsp;
+                                        <span className="text-gray-900">{asset.tipoEquipamento?.tipo || 'Outros'}</span>
+                                    </div>
+                                </div>
                             ) : (
-                                <p className="text-sm text-destructive">Ativo não encontrado ou removido.</p>
+                                <div className="h-full flex items-center justify-center">
+                                    <p className="text-red-500">Dados do ativo não disponíveis.</p>
+                                </div>
                             )}
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </section>
 
-                    <Card>
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                <User className="h-4 w-4" />
-                                Colaborador
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
+                    {/* Colaborador */}
+                    <section className="flex flex-col h-full">
+                        <div className="border rounded-lg p-6 h-full print:border-gray-300">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-6 flex items-center gap-2">
+                                <User className="h-4 w-4" /> Responsável / Destino
+                            </h3>
                             {collaborator ? (
-                                <Link href={`/employees/${collaborator.id}`} className="group block">
-                                    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors border">
-                                        <div>
-                                            <p className="font-bold text-sm group-hover:text-primary transition-colors">{collaborator.nome}</p>
-                                            <p className="text-xs text-muted-foreground">{collaborator.setor} - {collaborator.funcao}</p>
-                                        </div>
-                                        <div className="text-xs px-2 py-1 bg-muted rounded">#{collaborator.chapa}</div>
+                                <div className="space-y-3 text-sm">
+                                    <div>
+                                        <span className="font-semibold text-gray-600">Nome:</span>&nbsp;
+                                        <span className="font-bold text-gray-900 text-lg">{collaborator.nome}</span>
                                     </div>
-                                </Link>
+                                    <div>
+                                        <span className="font-semibold text-gray-600">Setor:</span>&nbsp;
+                                        <span className="text-gray-900">{collaborator.setor}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-semibold text-gray-600">Chapa:</span>&nbsp;
+                                        <span className="text-gray-900">{collaborator.chapa}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-semibold text-gray-600">Função:</span>&nbsp;
+                                        <span className="text-gray-900">{collaborator.funcao || '-'}</span>
+                                    </div>
+                                </div>
                             ) : (
-                                <p className="text-sm text-muted-foreground">Nenhum colaborador associado (Movimentação interna?).</p>
+                                <div className="h-full flex flex-col justify-center items-center text-center p-4 bg-gray-50 rounded print:bg-transparent">
+                                    <span className="text-2xl font-bold text-gray-700 mb-2">ESTOQUE TI</span>
+                                    <span className="text-sm text-gray-500 max-w-[200px]">Equipamento atualmente em posse do departamento de TI</span>
+                                </div>
                             )}
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </section>
+                </div>
+
+                {/* Rodapé de Assinatura (Apenas visível na impressão normalmente, mas deixaremos visível aqui também pra preview) */}
+                <div className="mt-12 pt-8 border-t-2 border-dashed border-gray-300 print:block">
+                    <div className="grid grid-cols-2 gap-16 text-center">
+                        <div>
+                            <div className="border-b border-gray-400 mb-2 h-8"></div>
+                            <p className="text-sm font-medium">Assinatura do Responsável (TI)</p>
+                        </div>
+                        <div>
+                            <div className="border-b border-gray-400 mb-2 h-8"></div>
+                            <p className="text-sm font-medium">Assinatura do Usuário / Recebedor</p>
+                        </div>
+                    </div>
+                    <p className="text-xs text-center text-gray-400 mt-8">
+                        Documento gerado eletronicamente pelo sistema de Controle de Ativos em {new Date().toLocaleDateString()}.
+                    </p>
                 </div>
             </div>
         </div>

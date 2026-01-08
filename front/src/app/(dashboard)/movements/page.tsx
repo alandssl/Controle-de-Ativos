@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     Search, Plus,
-    Eye, Settings2, Trash2
+    Eye, Settings2, Paperclip, AlertTriangle
 } from 'lucide-react';
 import { useNotifications } from '@/providers/notification-provider';
 
@@ -82,41 +82,25 @@ export default function MovementsPage() {
         fetchData();
     }, []);
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Tem certeza que deseja excluir esta movimentação?')) return;
 
-        try {
-            await api.delete(`${ENDPOINTS.MOVEMENTS}/${id}`);
-
-            setMovimentacoes(prev => prev.filter(m => m.id !== id));
-            addNotification({
-                title: 'Sucesso',
-                message: 'Movimentação excluída com sucesso.',
-                type: 'success'
-            });
-        } catch (error) {
-            console.error("Erro ao excluir:", error);
-            addNotification({
-                title: 'Erro',
-                message: 'Não foi possível excluir a movimentação.',
-                type: 'error'
-            });
-        }
-    };
 
     const richMovements = movimentacoes
         .map(mov => {
             const asset = ativos.find(a => a.id === mov.idEquipamento?.id);
             const employee = colaboradores.find(c => c.id === mov.idColaborador?.id);
 
+            const isStock = !mov.idColaborador?.id;
+
             return {
                 id: mov.id,
                 data: mov.dataMovimento,
                 id_ativo: mov.idEquipamento?.id,
                 id_colaborador: mov.idColaborador?.id,
-                tipo_desc: mov.tipoMovimento || (mov.observacao?.toLowerCase().includes('entrada') ? 'Entrada' : 'Saida'),
+                // Lógica de Negócio: Sem colaborador = Recebimento (Volta pro Estoque); Com colaborador = Entrega (Saiu do Estoque)
+                tipo_desc: mov.tipoMovimento || (isStock ? 'Entrada' : 'Saida'),
                 asset,
-                employee,
+                employee: isStock ? { nome: 'ESTOQUE TI', setor: '-' } as any : employee,
+                anexo: mov.anexo,
             };
         })
         .filter(item => {
@@ -334,16 +318,30 @@ export default function MovementsPage() {
                                     </TableRow>
                                 ) : (
                                     sortedMovements.map((item) => (
-                                        <TableRow key={item.id}>
+                                        <TableRow
+                                            key={item.id}
+                                        >
                                             {visibleColumns.tipo && (
                                                 <TableCell className="text-center">
-                                                    <div className="flex justify-center">
+                                                    <div className="flex justify-center items-center gap-2">
+                                                        {item.tipo_desc === 'Saida' && !item.anexo && (
+                                                            <div className="h-4 w-4" />
+                                                        )}
                                                         <Badge
                                                             variant={item.tipo_desc === 'Saida' ? 'default' : 'secondary'}
                                                             className="px-3"
                                                         >
                                                             {item.tipo_desc === 'Saida' ? 'Entrega' : 'Recebimento'}
                                                         </Badge>
+                                                        {item.tipo_desc === 'Saida' && !item.anexo && (
+                                                            <div className="relative group flex items-center font-normal">
+                                                                <AlertTriangle className="h-4 w-4 text-orange-500 animate-alert-blink cursor-help" />
+                                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-md whitespace-nowrap">
+                                                                    Movimento incompleto, insira o anexo
+                                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </TableCell>
                                             )}
@@ -380,16 +378,13 @@ export default function MovementsPage() {
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
-                                                    {/* Botão de Excluir Adicionado */}
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                        onClick={() => handleDelete(item.id)}
-                                                    >
-                                                        <span className="sr-only">Excluir</span>
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    {item.tipo_desc === 'Saida' && (
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-gray-900" title={item.anexo ? "Ver Anexo" : "Inserir Anexo"}>
+                                                            <Paperclip className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    {/* Botões de Editar e Excluir Removidos */}
+                                                    {/* Botão de Excluir Removido */}
                                                 </div>
                                             </TableCell>
                                         </TableRow>

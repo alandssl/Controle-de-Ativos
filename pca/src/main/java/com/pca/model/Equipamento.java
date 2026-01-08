@@ -100,6 +100,9 @@ public class Equipamento {
 
     @Column(name="exluded_at")
     private LocalDateTime excludedAt;
+
+    @Column(name="imei_celular")
+    private String imeiCelular;
     
     @PrePersist
     public void prePersist() {

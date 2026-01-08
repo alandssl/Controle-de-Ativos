@@ -30,6 +30,28 @@ public class MovimentoService {
         return movimentoRepository.findById(id);
     }
 
+    @Transactional
+    public Optional<Movimento> atualizar(Long id, Movimento atualizado) {
+        return movimentoRepository.findById(id).map(existente -> {
+            if (atualizado.getTipoMovimento() != null)
+                existente.setTipoMovimento(atualizado.getTipoMovimento());
+            if (atualizado.getDataMovimento() != null)
+                existente.setDataMovimento(atualizado.getDataMovimento());
+            if (atualizado.getObservacao() != null)
+                existente.setObservacao(atualizado.getObservacao());
+            if (atualizado.getValor() != null)
+                existente.setValor(atualizado.getValor());
+            if (atualizado.getIdEquipamento() != null)
+                existente.setIdEquipamento(atualizado.getIdEquipamento());
+            if (atualizado.getIdColaborador() != null)
+                existente.setIdColaborador(atualizado.getIdColaborador());
+            if (atualizado.getSetor() != null)
+                existente.setSetor(atualizado.getSetor());
+
+            return movimentoRepository.save(existente);
+        });
+    }
+
     public void deletar(Long id) {
         movimentoRepository.deleteById(id);
     }

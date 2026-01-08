@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,8 +24,7 @@ public class MovimentoController {
 
     private final MovimentoService movimentoService;
 
-
-     // Listar todos
+    // Listar todos
     @GetMapping
     public List<Movimento> listarTodos() {
         return movimentoService.listarTodos();
@@ -45,12 +43,5 @@ public class MovimentoController {
         return movimentoService.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    // Deletar
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        movimentoService.deletar(id);
-        return ResponseEntity.noContent().build();
     }
 }

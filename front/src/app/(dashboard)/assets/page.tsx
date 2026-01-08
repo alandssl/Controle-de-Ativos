@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     Plus, Search, FileDown, Check, X,
-    AlertTriangle, Eye, Edit, Settings2, Trash2
+    AlertTriangle, Eye, Edit, Settings2
 } from 'lucide-react';
 import { useNotifications } from '@/providers/notification-provider';
 
@@ -208,28 +208,7 @@ export default function AssetsPage() {
 
     const { addNotification } = useNotifications();
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Tem certeza que deseja excluir este ativo?')) return;
 
-        try {
-            await api.delete(`${ENDPOINTS.ASSETS}/${id}`);
-
-            addNotification({
-                title: 'Ativo excluído',
-                message: 'O equipamento foi removido com sucesso.',
-                type: 'success'
-            });
-            // Remover do estado sem recarregar
-            setAtivos(prev => prev.filter(a => a.id !== id));
-        } catch (error) {
-            console.error('Erro ao excluir:', error);
-            addNotification({
-                title: 'Erro',
-                message: 'Não foi possível excluir o ativo.',
-                type: 'error'
-            });
-        }
-    };
 
     // --- Renderização ---
     return (
@@ -461,15 +440,7 @@ export default function AssetsPage() {
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                        title="Excluir"
-                                                        onClick={() => handleDelete(asset.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    {/* Botão de Excluir Removido */}
                                                 </div>
                                             </TableCell>
                                         </TableRow>

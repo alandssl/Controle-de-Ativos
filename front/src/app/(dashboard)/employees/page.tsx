@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-    Plus, Search, FileDown, Eye, Edit, Settings2, Trash2
+    Plus, Search, FileDown, Eye, Edit, Settings2
 } from 'lucide-react';
-import { useNotifications } from '@/providers/notification-provider';
+
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +44,7 @@ export default function EmployeesPage() {
     const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const { addNotification } = useNotifications();
+
 
     const employeeStatuses = [
         { label: 'Ativo', value: 'ATIVO' },
@@ -70,27 +70,7 @@ export default function EmployeesPage() {
         fetchEmployees();
     }, []);
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Tem certeza que deseja excluir este colaborador?')) return;
 
-        try {
-            await api.delete(`${ENDPOINTS.EMPLOYEES}/${id}`);
-
-            setColaboradores(prev => prev.filter(c => c.id !== id));
-            addNotification({
-                title: 'Sucesso',
-                message: 'Colaborador excluído com sucesso.',
-                type: 'success'
-            });
-        } catch (error) {
-            console.error("Erro ao excluir:", error);
-            addNotification({
-                title: 'Erro',
-                message: 'Não foi possível excluir o colaborador.',
-                type: 'error'
-            });
-        }
-    };
 
     const filteredEmployees = colaboradores.filter(employee => {
         const matchesSearch =
@@ -380,15 +360,7 @@ export default function EmployeesPage() {
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                        title="Excluir"
-                                                        onClick={() => handleDelete(employee.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    {/* Botão excluir removido a pedido */}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
