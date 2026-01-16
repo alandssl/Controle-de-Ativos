@@ -24,52 +24,58 @@ import lombok.NoArgsConstructor;
 public class EquipamentoSucata {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
-    private Long id; 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
-    @JoinColumn(name="id_equipamento", referencedColumnName="id")
+    @JoinColumn(name = "id_equipamento", referencedColumnName = "id")
     private Equipamento equipamento;
-    
-    @Column(name= "created_at", nullable= false)
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name="updated_at")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name="excluded_at")
+    @Column(name = "excluded_at")
     private LocalDateTime excludedAt;
 
-    public Long getId(){
+    @jakarta.persistence.PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @jakarta.persistence.PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public Equipamento getDescricao(){
+    public Equipamento getDescricao() {
         return equipamento;
     }
 
-    public void setDescricao(Equipamento descricao){
+    public void setDescricao(Equipamento descricao) {
         this.equipamento = descricao;
     }
 
-    public LocalDateTime getCreatedAt(){
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-
-    public LocalDateTime getUpdateAt(){
+    public LocalDateTime getUpdateAt() {
         return updatedAt;
     }
 
-    public void setUpdateAt(LocalDateTime updatedAt){
+    public void setUpdateAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public LocalDateTime getExcludedAt(){
+    public LocalDateTime getExcludedAt() {
         return excludedAt;
     }
-
-
-
 
 }

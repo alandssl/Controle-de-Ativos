@@ -20,31 +20,40 @@ public class EquipamentoSucataService {
     private final EquipamentoRepository equipamentoRepository;
 
     @Transactional
-    public EquipamentoSucata cadastrar(EquipamentoSucata equipamentoSucata){
+    public EquipamentoSucata cadastrar(EquipamentoSucata equipamentoSucata) {
 
-        // Se foi informado um Equipamento, carregá-lo do banco para garantir que não é transient
-        if (equipamentoSucata.getDescricao() != null && equipamentoSucata.getEquipamento().getPatrimonio() != null) {
-
-            Equipamento equipamento = equipamentoRepository
-            .findByPatrimonio(equipamentoSucata.getEquipamento().getPatrimonio());
-            
-            if (equipamento == null) {
-                throw new RuntimeException("Equipamento com patrimônio "
-                 + equipamentoSucata.getDescricao() + " não encontrado");
+        // Se foi informado um Equipamento, carregá-lo do banco para garantir que não é
+        // transient
+        if (equipamentoSucata.getEquipamento() != null) {
+            Equipamento eq = equipamentoSucata.getEquipamento();
+            if (eq.getId() != null) {
+                eq = equipamentoRepository.findById(eq.getId())
+                        .orElseThrow(() -> new RuntimeException("Equipamento não encontrado"));
+            } else if (eq.getPatrimonio() != null) {
+                eq = equipamentoRepository.findByPatrimonio(eq.getPatrimonio());
+                if (eq == null) {
+                    throw new RuntimeException("Equipamento com patrimônio "
+                            + equipamentoSucata.getEquipamento().getPatrimonio() + " não encontrado");
+                }
             }
-            equipamentoSucata.setDescricao(equipamento);
+            equipamentoSucata.setEquipamento(eq);
+            // Also update the legacy alias if needed, though Lombok handles the real field
+            equipamentoSucata.setDescricao(eq);
+
+            // Soft delete Equipment to remove from main lists
+            eq.setExcludedAt(java.time.LocalDateTime.now());
+            equipamentoRepository.save(eq);
         }
         return sucataRepository.save(equipamentoSucata);
     }
 
-    public List<EquipamentoSucata> listarTodos (){
+    public List<EquipamentoSucata> listarTodos() {
         return sucataRepository.findAll();
     }
 
-
-    public EquipamentoSucata buscarPorId(Long id){
+    public EquipamentoSucata buscarPorId(Long id) {
         return sucataRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Equipamento não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Equipamento não encontrado"));
     }
 
 }

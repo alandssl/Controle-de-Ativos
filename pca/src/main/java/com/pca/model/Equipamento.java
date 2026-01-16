@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "equipamentos")
-
+@org.hibernate.annotations.SQLRestriction("exluded_at IS NULL")
 public class Equipamento {
 
     @Id

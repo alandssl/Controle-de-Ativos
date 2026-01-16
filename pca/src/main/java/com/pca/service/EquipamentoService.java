@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EquipamentoService {
     private final EquipamentoRepository repository;
-    private final com.pca.repository.NotaFiscalRepository notaFiscalRepository;
+    private final com.pca.repository.notaFiscalRepository notaFiscalRepository;
     private final com.pca.repository.MovimentoRepository movimentoRepository;
     private final com.pca.repository.ColaboradorRepository colaboradorRepository;
 

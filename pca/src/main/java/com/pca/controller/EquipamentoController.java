@@ -16,7 +16,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.pca.dto.EquipamentoRequest;
 import com.pca.model.Equipamento;
-import com.pca.repository.NotaFiscalRepository;
+import com.pca.repository.notaFiscalRepository;
 import com.pca.repository.StatusRepository;
 import com.pca.repository.tipoEquipamentoRepository;
 import com.pca.repository.tipoEstadoRepository;
@@ -33,7 +33,7 @@ public class EquipamentoController {
         private final EquipamentoService service;
         private final tipoEstadoRepository tipoEstadoRepository;
         private final tipoEquipamentoRepository tipoEquipamentoRepository;
-        private final NotaFiscalRepository notaFiscalRepository;
+        private final notaFiscalRepository notaFiscalRepository;
         private final StatusRepository statusRepository;
 
         @GetMapping

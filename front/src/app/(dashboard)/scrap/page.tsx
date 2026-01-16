@@ -66,7 +66,18 @@ export default function ScrapPage() {
                     api.get(ENDPOINTS.ASSETS)
                 ]);
 
-                setPecas(pecasData.content ?? pecasData);
+                const rawPecas = pecasData.content ?? pecasData;
+                const mappedPecas = rawPecas.map((p: any) => ({
+                    ...p,
+                    nome: p.descricao,
+                    // Try to extract serial from observation if it matches pattern "Serial: X"
+                    serial: p.observacao ? (p.observacao.includes('Serial:') ? p.observacao.split('Serial:')[1].split('.')[0].trim() : p.observacao) : '',
+                    status: p.disponivel ? 'Disponivel' : 'Utilizada',
+                    id_ativo_origem: p.sucata?.equipamento?.id,
+                    data_retirada: p.dataRetirada
+                }));
+
+                setPecas(mappedPecas);
                 setAtivos(ativosData.content ?? ativosData);
             } catch (error) {
                 console.error("Erro ao buscar dados:", error);
@@ -107,10 +118,11 @@ export default function ScrapPage() {
         const originAsset = ativos.find(a => a.id === part.id_ativo_origem);
         return { ...part, originAsset };
     }).filter(item => {
-        const matchesSearch = item.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.serial?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (item.nome || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (item.serial || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(item.status);
+        const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(item.status || '');
+
 
         return matchesSearch && matchesStatus;
     });
@@ -129,8 +141,8 @@ export default function ScrapPage() {
             case 'origem':
                 valueA = a.originAsset?.patrimonio || ''; valueB = b.originAsset?.patrimonio || ''; break;
             case 'retirada':
-                valueA = new Date(a.data_retirada).getTime();
-                valueB = new Date(b.data_retirada).getTime();
+                valueA = new Date(a.data_retirada || '').getTime();
+                valueB = new Date(b.data_retirada || '').getTime();
                 break;
             default:
                 return 0;
@@ -340,7 +352,7 @@ export default function ScrapPage() {
                                             {visibleColumns.retirada && (
                                                 <TableCell className="text-center">
                                                     <div className="flex justify-center">
-                                                        {new Date(part.data_retirada).toLocaleDateString()}
+                                                        {part.data_retirada ? new Date(part.data_retirada).toLocaleDateString() : 'N/A'}
                                                     </div>
                                                 </TableCell>
                                             )}
@@ -358,7 +370,7 @@ export default function ScrapPage() {
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
-                                                    <Button
+                                                    {/* <Button
                                                         variant="ghost"
                                                         size="icon"
                                                         className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -366,7 +378,7 @@ export default function ScrapPage() {
                                                     >
                                                         <span className="sr-only">Excluir</span>
                                                         <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    </Button> */}
                                                 </div>
                                             </TableCell>
                                         </TableRow>

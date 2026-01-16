@@ -103,4 +103,5 @@ export const ENDPOINTS = {
     TIPO_ESTADOS: '/equipamentos/tipo-estados',
     SUPPLIER_NAMES: '/notas-fiscais/fornecedores',
     INVOICE_NUMBERS: '/notas-fiscais/numeros',
+    SCRAP_RECORD: '/sucata',
 };

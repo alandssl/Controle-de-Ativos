@@ -26,7 +26,13 @@ export default function LoginPage() { // Componente funcional da página de logi
         // Lógica simples de verificação (mock)
         if (email === 'admin@pca.com' || email === 'user@pca.com') { // Verifica se o email corresponde a usuários de teste
             // Em um aplicativo real, definiria cookies/tokens aqui
-            localStorage.setItem('user', JSON.stringify({ email, role: email.startsWith('admin') ? 'admin' : 'user' })); // Salva info do usuário no localStorage
+            const user = {
+                email,
+                role: email.startsWith('admin') ? 'admin' : 'user',
+                // Mock linkage to collaborator Vitor Lemos for demo
+                name: email === 'admin@pca.com' ? 'Vitor Lemos' : 'Usuário Padrão'
+            };
+            localStorage.setItem('user', JSON.stringify(user)); // Salva info do usuário no localStorage
             router.push('/'); // Redireciona para a página inicial
         } else { // Se as credenciais não forem válidas
             alert('Credenciais inválidas. Tente admin@pca.com'); // Exibe um alerta para o usuário

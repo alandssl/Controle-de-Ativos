@@ -18,7 +18,7 @@ import com.pca.model.NotaFiscal;
 import com.pca.service.NotaFiscalService;
 import com.pca.util.NotaFiscalReportUtil;
 import com.pca.dto.NotaFiscalRequest;
-import com.pca.repository.NotaFiscalRepository;
+import com.pca.repository.notaFiscalRepository;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -28,7 +28,7 @@ public class NotaFiscalController {
     @Autowired
     private NotaFiscalService notaFiscalService;
     @Autowired
-    private NotaFiscalRepository repository;
+    private notaFiscalRepository repository;
 
     @GetMapping
     public java.util.List<NotaFiscal> listarTodas() {

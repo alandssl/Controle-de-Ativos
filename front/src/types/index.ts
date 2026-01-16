@@ -91,11 +91,22 @@ export interface Contrato {
 
 export interface PecaSucata {
   id: number;
-  nome: string;
+  descricao: string; // Was nome
+  observacao?: string; // Was serial (implied)
+  sucata?: {
+    id: number;
+    equipamento?: Ativo;
+  };
+  // id_ativo_origem can be computed from sucata.equipamento.id
+  disponivel: boolean;
+  dataRetirada: string; // was data_retirada (backend naming usually camelCase, let's check Peca.java: dataRetirada)
+
+  // Frontend Compat helpers (optional, if we map them)
+  nome?: string;
   serial?: string;
-  id_ativo_origem: number; // Vinculado ao Ativo que virou sucata
-  status: 'Disponivel' | 'Utilizada' | 'Descartada' | 'Reservado';
-  data_retirada: string;
+  id_ativo_origem?: number;
+  status?: string;
+  data_retirada?: string; // mapping helper
 }
 
 export interface NotaFiscal {

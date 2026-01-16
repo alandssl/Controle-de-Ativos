@@ -8,13 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.pca.model.NotaFiscal;
-import com.pca.repository.NotaFiscalRepository;
+import com.pca.repository.notaFiscalRepository;
 
 @Service
 public class NotaFiscalService {
 
     @Autowired
-    private NotaFiscalRepository repository;
+    private notaFiscalRepository repository;
 
     public NotaFiscal salvar(NotaFiscal nota) {
         return repository.save(nota);

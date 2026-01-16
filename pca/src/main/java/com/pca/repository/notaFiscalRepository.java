@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.pca.model.NotaFiscal;
 
 @Repository
-public interface NotaFiscalRepository extends JpaRepository<NotaFiscal, Long> {
+public interface notaFiscalRepository extends JpaRepository<NotaFiscal, Long> {
     List<NotaFiscal> findByDataEmissaoBetween(Date inicio, Date fim);
 
     List<NotaFiscal> findByFornecedorNomeContainingIgnoreCase(String fornecedor);

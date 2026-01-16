@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("api/peca")
+@RequestMapping("/api/pecas")
 @RequiredArgsConstructor
 public class PecaController {
 
