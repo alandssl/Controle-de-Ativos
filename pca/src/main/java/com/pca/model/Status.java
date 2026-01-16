@@ -11,28 +11,32 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
-
 @Entity
-@Table(name="status")
+@Table(name = "status")
 @AllArgsConstructor
 @NoArgsConstructor
+@lombok.Data
 public class Status {
 
+    @jakarta.persistence.PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
-    private String descricao; //Ativo, inativo, manutenção
+    private String descricao; // Ativo, inativo, manutenção
 
-    @Column(name="created_at", nullable=false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name="update_at")
+    @Column(name = "update_at")
     private LocalDateTime updateAt;
 
-    @Column(name="exluded_at")
+    @Column(name = "exluded_at")
     private LocalDateTime excludedAt;
-
 
 }

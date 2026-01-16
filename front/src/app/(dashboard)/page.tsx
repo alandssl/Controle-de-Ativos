@@ -2,30 +2,55 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Laptop, AlertCircle, CheckCircle2, Package, ArrowRight, Activity } from "lucide-react";
-import { Ativo, Movimentacao } from "@/types";
+import { Laptop, Users, ArrowLeftRight, Recycle, FileText, CheckCircle2, Wrench, Plus, Monitor } from "lucide-react";
+import { Ativo, Movimentacao, Colaborador, PecaSucata, NotaFiscal } from "@/types";
 import { api, ENDPOINTS } from '@/services/api';
 
 export default function Home() {
   const [ativos, setAtivos] = useState<Ativo[]>([]);
   const [movimentacoes, setMovimentacoes] = useState<Movimentacao[]>([]);
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
+  const [pecasSucata, setPecasSucata] = useState<PecaSucata[]>([]);
+  const [notasFiscais, setNotasFiscais] = useState<NotaFiscal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [randomMessage, setRandomMessage] = useState("");
 
   useEffect(() => {
+    const messages = [
+      "Tenha um excelente dia de trabalho!",
+      "Que tal revisar o status dos ativos hoje?",
+      "Mantenha o inventário sempre atualizado.",
+      "A organização é a chave para a eficiência.",
+      "Tudo pronto para mais um dia produtivo?",
+      "Não esqueça de verificar as últimas movimentações.",
+      "Seu trabalho faz toda a diferença!",
+      "Controle total, resultados máximos.",
+      "Vamos garantir que tudo esteja em ordem?",
+      "Hoje é um ótimo dia para organizar!",
+    ];
+    setRandomMessage(messages[Math.floor(Math.random() * messages.length)]);
+
     const fetchData = async () => {
       try {
-        const [ativosData, movData] = await Promise.all([
-          api.get(ENDPOINTS.ASSETS),
-          api.get(ENDPOINTS.MOVEMENTS)
+        const [ativosData, movData, colabData, scrapData, nfData] = await Promise.all([
+          api.get(ENDPOINTS.ASSETS).catch(e => { console.error("Error fetching assets", e); return []; }),
+          api.get(ENDPOINTS.MOVEMENTS).catch(e => { console.error("Error fetching movements", e); return []; }),
+          api.get(ENDPOINTS.EMPLOYEES).catch(e => { console.error("Error fetching employees", e); return []; }),
+          api.get(ENDPOINTS.SCRAP).catch(e => { console.error("Error fetching scrap", e); return []; }),
+          api.get(ENDPOINTS.INVOICES).catch(e => { console.error("Error fetching invoices", e); return []; })
         ]);
 
-        setAtivos(ativosData.content ?? ativosData);
-        setMovimentacoes(movData.content ?? movData);
+        // Safer data extraction - handles both array responses and paginated { content: [...] } responses
+        setAtivos(Array.isArray(ativosData) ? ativosData : ativosData?.content || []);
+        setMovimentacoes(Array.isArray(movData) ? movData : movData?.content || []);
+        setColaboradores(Array.isArray(colabData) ? colabData : colabData?.content || []);
+        setPecasSucata(Array.isArray(scrapData) ? scrapData : scrapData?.content || []);
+        setNotasFiscais(Array.isArray(nfData) ? nfData : nfData?.content || []);
 
       } catch (error) {
-        console.error("Failed to fetch dashboard data", error);
+        console.error("Critical error fetching dashboard data", error);
       } finally {
         setLoading(false);
       }
@@ -34,239 +59,229 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // Calculate Stats
+  // KPIs
   const totalAtivos = ativos.length;
-  const emUso = ativos.filter(a => a.status_desc === 'Em Uso').length;
-  const disponivel = ativos.filter(a => a.status_desc === 'Disponível' || a.status_desc === 'Novo').length;
-  const sucata = ativos.filter(a => a.status_desc === 'Sucata' || a.status_desc === 'Em Manutenção').length;
+  const ativosDisponiveis = ativos.filter(a => a.status_desc === 'Disponível' || a.status_desc === 'Novo').length;
+  const ativosEmUso = ativos.filter(a => a.status_desc === 'Em Uso').length;
+  const ativosManutencao = ativos.filter(a => a.status_desc === 'Em Manutenção' || a.status_desc === 'Quebrado').length;
 
-  const currentDate = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const totalColaboradores = colaboradores.length;
+  const colabAtivos = colaboradores.length;
 
-  // Process recent movements for display
-  const recentMovements = movimentacoes
-    .sort((a, b) => new Date(b.dataMovimento).getTime() - new Date(a.dataMovimento).getTime())
-    .slice(0, 5)
-    .map(m => ({
-      ...m,
-      tipo_desc: m.observacao?.toLowerCase().includes('entrada') ? 'Entrada' : 'Saida',
-      display_date: new Date(m.dataMovimento).toLocaleDateString()
-    }));
+  const totalMovimentacoes = movimentacoes.length;
+  const ultimaMovimentacao = movimentacoes.length > 0
+    ? new Date(Math.max(...movimentacoes.map(m => new Date(m.dataMovimento).getTime()))).toLocaleDateString()
+    : '-';
+
+  const totalSucata = pecasSucata.length;
+  const pecasDisponiveis = pecasSucata.filter(p => p.status === 'Disponivel').length;
+
+  const totalNotas = notasFiscais.length;
+  const valorTotalInvestido = notasFiscais.reduce((acc, nf) => acc + (nf.valorTotal || 0), 0);
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Carregando dashboard...</div>;
+    return <div className="p-8 text-center text-muted-foreground animate-pulse">Carregando dashboard...</div>;
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard Geral</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Visão estratégica dos ativos de TI e movimentações recentes.
+    <div className="space-y-6 animate-in fade-in duration-500">
+
+      {/* Header Section */}
+      <div className="flex flex-col gap-1 pb-2">
+        <div className="flex items-center gap-3">
+          <Monitor className="h-8 w-8 text-blue-600" />
+          <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent uppercase">
+            Sistema Controle de Ativos
+          </h2>
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight">Bem-vindo, Raphael Araujo</h1>
+        {randomMessage && (
+          <p className="text-xs text-muted-foreground/80 italic animate-in slide-in-from-left-2 duration-500">
+            "{randomMessage}"
           </p>
-        </div>
-        <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 rounded-full border">
-          <Activity className="h-4 w-4 text-primary" />
-          <span className="text-xs font-medium text-muted-foreground capitalize">{currentDate}</span>
-        </div>
+        )}
+        <p className="text-muted-foreground text-sm flex items-center gap-2">
+          Administrador do Sistema • Tecnologia da Informação
+        </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {/* Total Ativos Card */}
-        <Link href="/assets" className="no-underline group">
-          <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary cursor-pointer relative overflow-hidden h-full">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Laptop className="h-24 w-24 translate-x-4 -translate-y-4" />
-            </div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Total de Ativos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground tabular-nums">{totalAtivos}</div>
-              <div className="flex items-center text-xs text-emerald-500 mt-1 font-medium">
-                <ArrowRight className="h-3 w-3 mr-1 rotate-45" /> Gerenciar
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+      {/* Grid Expandido em 2 linhas de 4 colunas (lg) */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
-        {/* Em Uso Card */}
-        <Link href="/assets?status=Em Uso" className="cursor-pointer no-underline group">
-          <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500 cursor-pointer relative overflow-hidden h-full">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <CheckCircle2 className="h-24 w-24 translate-x-4 -translate-y-4 text-blue-500" />
-            </div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Em Uso</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground tabular-nums">{emUso}</div>
-              <p className="text-xs text-muted-foreground mt-1">{(totalAtivos > 0 ? emUso / totalAtivos * 100 : 0).toFixed(0)}% do inventário</p>
-            </CardContent>
-          </Card>
-        </Link>
+        {/* --- LINHA 1 --- */}
 
-        {/* Disponíveis Card */}
-        <Link href="/assets?status=Disponível" className="cursor-pointer no-underline group">
-          <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-emerald-500 cursor-pointer relative overflow-hidden h-full">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Package className="h-24 w-24 translate-x-4 -translate-y-4 text-emerald-500" />
-            </div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Disponíveis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground tabular-nums">{disponivel}</div>
-              <p className="text-xs text-emerald-500 mt-1 font-medium">Prontos para uso</p>
-            </CardContent>
-          </Card>
-        </Link>
-
-        {/* Sucata Card */}
-        <Link href="/assets?status=Sucata" className="cursor-pointer no-underline group">
-          <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-destructive cursor-pointer relative overflow-hidden h-full">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <AlertCircle className="h-24 w-24 translate-x-4 -translate-y-4 text-destructive" />
-            </div>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-semibold tracking-wide uppercase text-muted-foreground">Manutenção/Sucata</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground tabular-nums">{sucata}</div>
-              <p className="text-xs text-destructive mt-1 font-medium">Requer atenção</p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
-            <div className="space-y-1">
-              <CardTitle>Atividades Recentes</CardTitle>
-              <CardDescription>Últimas movimentações registradas no sistema.</CardDescription>
-            </div>
-            <Link href="/movements" className="no-underline">
-              <Button variant="outline" size="sm" className="h-8 gap-1">
-                Ver histórico <ArrowRight className="h-3 w-3" />
+        {/* 1. Ativos Totais */}
+        <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-600 overflow-hidden h-full flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Link href="/assets" className="flex items-center gap-2 flex-1 no-underline group" title="Ver lista de Ativos">
+              <CardTitle className="text-sm font-bold tracking-wide uppercase text-muted-foreground group-hover:text-blue-600 transition-colors">Total Ativos</CardTitle>
+              <Laptop className="h-4 w-4 text-blue-600" />
+            </Link>
+            <Link href="/assets/new" className="no-underline">
+              <Button variant="outline" size="sm" className="h-7 gap-1 px-3 text-xs flex items-center justify-center" title="Cadastrar Ativo">
+                <Plus className="h-3.5 w-3.5" /> Novo Ativo
               </Button>
             </Link>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="bg-card">
-              {recentMovements.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground text-sm">Nenhuma movimentação recente.</div>
-              ) : (
-                recentMovements.map((mov, index) => (
-                  <Link
-                    key={mov.id}
-                    href={`/movements/${mov.id}`}
-                    className={`
-                            flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors no-underline group border-l-2 border-l-transparent hover:border-l-primary
-                            ${index !== recentMovements.length - 1 ? 'border-b' : ''}
-                        `}>
-
-                    <div className="flex items-center gap-4">
-                      <div className={`
-                            h-10 w-10 rounded-full flex items-center justify-center border shadow-sm
-                            ${mov.tipo_desc === 'Saida' ? 'bg-primary/10 border-primary/20' : 'bg-emerald-500/10 border-emerald-500/20'}
-                        `}>
-                        <CheckCircle2 className={`h-5 w-5 ${mov.tipo_desc === 'Saida' ? 'text-primary' : 'text-emerald-500'}`} />
-                      </div>
-
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium leading-none text-foreground group-hover:text-primary transition-colors">
-                          {mov.observacao || 'Sem observação'}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span className={`
-                                px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide
-                                ${mov.tipo_desc === 'Saida' ? 'bg-primary/10 text-primary' : 'bg-emerald-500/10 text-emerald-600'}
-                            `}>
-                            {mov.tipo_desc === 'Saida' ? 'Entrega' : 'Recebimento'}
-                          </span>
-                          <span>•</span>
-                          <span>{mov.display_date}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <span className={`text-sm font-bold ${mov.tipo_desc === 'Saida' ? 'text-muted-foreground' : 'text-emerald-600'}`}>
-                        {mov.tipo_desc === 'Saida' ? '-1' : '+1'}
-                      </span>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-          </CardContent>
+          <Link href="/assets" className="block flex-1 no-underline">
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{totalAtivos}</div>
+              <p className="text-xs text-muted-foreground mt-1">Inventário completo</p>
+            </CardContent>
+          </Link>
         </Card>
 
-        <Card className="col-span-3 shadow-sm">
-          <CardHeader className="border-b px-6 py-4">
-            <CardTitle>Status do Inventário</CardTitle>
-            <CardDescription>Distribuição percentual dos ativos.</CardDescription>
+        {/* 2. Em Uso (Sem botão de cadastro, apenas filtro) */}
+        <Link href="/assets?status=Em%20Uso" className="no-underline group">
+          <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-indigo-500 cursor-pointer overflow-hidden h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold tracking-wide uppercase text-muted-foreground">Em Uso</CardTitle>
+              <Activity className="h-4 w-4 text-indigo-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{ativosEmUso}</div>
+              <p className="text-xs text-muted-foreground mt-1">Alocados a colaboradores</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* 3. Colaboradores */}
+        <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-violet-500 overflow-hidden h-full flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Link href="/employees" className="flex items-center gap-2 flex-1 no-underline group" title="Ver lista de Colaboradores">
+              <CardTitle className="text-sm font-bold tracking-wide uppercase text-muted-foreground group-hover:text-violet-500 transition-colors">Colaboradores</CardTitle>
+              <Users className="h-4 w-4 text-violet-500" />
+            </Link>
+            <Link href="/employees/new" className="no-underline">
+              <Button variant="outline" size="sm" className="h-7 gap-1 px-3 text-xs flex items-center justify-center" title="Cadastrar Colaborador">
+                <Plus className="h-3.5 w-3.5" /> Novo Colaborador
+              </Button>
+            </Link>
           </CardHeader>
-          <CardContent className="p-6 space-y-8">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 font-medium">
-                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
-                  Em Uso (Ativos)
-                </span>
-                <span className="font-bold tabular-nums">{emUso} <span className="text-muted-foreground text-xs font-normal">/ {totalAtivos}</span></span>
-              </div>
-              <div className="h-2.5 w-full bg-muted/50 rounded-full overflow-hidden border border-muted">
-                <div
-                  className="h-full bg-blue-500 transition-all duration-1000 ease-out"
-                  style={{ width: `${(totalAtivos > 0 ? emUso / totalAtivos * 100 : 0)}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 font-medium">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                  Disponíveis (Estoque)
-                </span>
-                <span className="font-bold tabular-nums">{disponivel} <span className="text-muted-foreground text-xs font-normal">/ {totalAtivos}</span></span>
-              </div>
-              <div className="h-2.5 w-full bg-muted/50 rounded-full overflow-hidden border border-muted">
-                <div
-                  className="h-full bg-emerald-500 transition-all duration-1000 ease-out"
-                  style={{ width: `${(totalAtivos > 0 ? disponivel / totalAtivos * 100 : 0)}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 font-medium">
-                  <div className="w-2.5 h-2.5 rounded-full bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div>
-                  Sucata / Manutenção
-                </span>
-                <span className="font-bold tabular-nums">{sucata} <span className="text-muted-foreground text-xs font-normal">/ {totalAtivos}</span></span>
-              </div>
-              <div className="h-2.5 w-full bg-muted/50 rounded-full overflow-hidden border border-muted">
-                <div
-                  className="h-full bg-destructive transition-all duration-1000 ease-out"
-                  style={{ width: `${(totalAtivos > 0 ? sucata / totalAtivos * 100 : 0)}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t">
-              <div className="rounded-lg bg-muted/30 p-4 border border-dashed text-center">
-                <p className="text-xs text-muted-foreground">
-                  Capacidade total do inventário: <span className="font-bold text-foreground">{totalAtivos}</span> itens cadastrados.
-                </p>
-              </div>
-            </div>
-          </CardContent>
+          <Link href="/employees" className="block flex-1 no-underline">
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{totalColaboradores}</div>
+              <p className="text-xs text-muted-foreground mt-1">{colabAtivos} ativos</p>
+            </CardContent>
+          </Link>
         </Card>
+
+        {/* 4. Movimentações */}
+        <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-orange-500 overflow-hidden h-full flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Link href="/movements" className="flex items-center gap-2 flex-1 no-underline group" title="Ver Movimentações">
+              <CardTitle className="text-sm font-bold tracking-wide uppercase text-muted-foreground group-hover:text-orange-500 transition-colors">Movimentações</CardTitle>
+              <ArrowLeftRight className="h-4 w-4 text-orange-500" />
+            </Link>
+            <Link href="/movements/new" className="no-underline">
+              <Button variant="outline" size="sm" className="h-7 gap-1 px-3 text-xs flex items-center justify-center" title="Nova Movimentação">
+                <Plus className="h-3.5 w-3.5" /> Nova Movimentação
+              </Button>
+            </Link>
+          </CardHeader>
+          <Link href="/movements" className="block flex-1 no-underline">
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{totalMovimentacoes}</div>
+              <p className="text-xs text-muted-foreground mt-1">Última: {ultimaMovimentacao}</p>
+            </CardContent>
+          </Link>
+        </Card>
+
+
+        {/* --- LINHA 2 --- */}
+
+        {/* 5. Disponíveis */}
+        <Link href="/assets?status=Disponivel" className="no-underline group">
+          <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-emerald-500 cursor-pointer overflow-hidden h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold tracking-wide uppercase text-muted-foreground">Disponíveis</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600">{ativosDisponiveis}</div>
+              <p className="text-xs text-muted-foreground mt-1">Prontos para uso</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* 6. Manutenção */}
+        <Link href="/assets?status=Manutencao" className="no-underline group">
+          <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-red-500 cursor-pointer overflow-hidden h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold tracking-wide uppercase text-muted-foreground">Manutenção</CardTitle>
+              <Wrench className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{ativosManutencao}</div>
+              <p className="text-xs text-muted-foreground mt-1">Reparo necessário</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* 7. Sucata */}
+        <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-rose-500 overflow-hidden h-full flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Link href="/scrap" className="flex items-center gap-2 flex-1 no-underline group" title="Ver Sucata">
+              <CardTitle className="text-sm font-bold tracking-wide uppercase text-muted-foreground group-hover:text-rose-500 transition-colors">Sucata</CardTitle>
+              <Recycle className="h-4 w-4 text-rose-500" />
+            </Link>
+            <Link href="/scrap/new" className="no-underline">
+              <Button variant="outline" size="sm" className="h-7 gap-1 px-3 text-xs flex items-center justify-center" title="Cadastrar Sucata">
+                <Plus className="h-3.5 w-3.5" /> Nova Sucata
+              </Button>
+            </Link>
+          </CardHeader>
+          <Link href="/scrap" className="block flex-1 no-underline">
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{totalSucata}</div>
+              <p className="text-xs text-muted-foreground mt-1">{pecasDisponiveis} reaproveitáveis</p>
+            </CardContent>
+          </Link>
+        </Card>
+
+        {/* 8. Investimento/Notas */}
+        <Card className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-teal-500 overflow-hidden h-full flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Link href="/invoices" className="flex items-center gap-2 flex-1 no-underline group" title="Ver Notas Fiscais">
+              <CardTitle className="text-sm font-bold tracking-wide uppercase text-muted-foreground group-hover:text-teal-500 transition-colors">Investimento</CardTitle>
+              <FileText className="h-4 w-4 text-teal-500" />
+            </Link>
+            <Link href="/invoices/new" className="no-underline">
+              <Button variant="outline" size="sm" className="h-7 gap-1 px-3 text-xs flex items-center justify-center" title="Cadastrar Nota Fiscal">
+                <Plus className="h-3.5 w-3.5" /> Nova Nota
+              </Button>
+            </Link>
+          </CardHeader>
+          <Link href="/invoices" className="block flex-1 no-underline">
+            <CardContent>
+              <div className="text-xl font-bold truncate text-foreground" title={`R$ ${valorTotalInvestido}`}>
+                R$ {new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(valorTotalInvestido)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{totalNotas} notas fiscais</p>
+            </CardContent>
+          </Link>
+        </Card>
+
       </div>
     </div>
   );
+}
+
+function Activity(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    </svg>
+  )
 }

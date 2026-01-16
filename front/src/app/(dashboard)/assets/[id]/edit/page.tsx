@@ -199,185 +199,13 @@ export default function EditAssetPage({ params }: PageProps) {
             </div>
 
             <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Identificação */}
+                <div className="grid gap-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Identificação</CardTitle>
+                            <CardTitle>Atualizar Status e Observações</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="patrimonio">Patrimônio</Label>
-                                    <Input
-                                        id="patrimonio"
-                                        placeholder="NTB-2024-001"
-                                        required
-                                        value={formData.patrimonio}
-                                        onChange={e => handleChange('patrimonio', e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="tipoEquipamento">Tipo</Label>
-                                    <Select
-                                        value={formData.tipoEquipamento}
-                                        onChange={(e: any) => handleChange('tipoEquipamento', e.target.value)}
-                                    >
-                                        <option value="">Selecione</option>
-                                        <option value="DESKTOP">Desktop</option>
-                                        <option value="NOTEBOOK">Notebook</option>
-                                        <option value="IMPRESSORA">Impressora</option>
-                                        <option value="CELULAR">Celular</option>
-                                        <option value="TABLET">Tablet</option>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="etiqueta">Etiqueta (SN)</Label>
-                                    <Input
-                                        id="etiqueta"
-                                        placeholder="Serial Number"
-                                        value={formData.etiqueta}
-                                        onChange={e => handleChange('etiqueta', e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="tec">Nome Técnico (Tec)</Label>
-                                    <Input
-                                        id="tec"
-                                        placeholder="Ex: PC-TI-01"
-                                        value={formData.tec}
-                                        onChange={e => handleChange('tec', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="fabricante">Fabricante</Label>
-                                    <Input
-                                        id="fabricante"
-                                        placeholder="Ex: Dell, HP"
-                                        value={formData.fabricante}
-                                        onChange={e => handleChange('fabricante', e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="modelo">Modelo</Label>
-                                    <Input
-                                        id="modelo"
-                                        placeholder="Ex: Latitude 5420"
-                                        required
-                                        value={formData.modelo}
-                                        onChange={e => handleChange('modelo', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="descricao">Descrição</Label>
-                                <Input
-                                    id="descricao"
-                                    placeholder="Descrição breve"
-                                    value={formData.descricao}
-                                    onChange={e => handleChange('descricao', e.target.value)}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Hardware */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Hardware</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="gpu">GPU (Placa de Vídeo)</Label>
-                                <Input
-                                    id="gpu"
-                                    placeholder="Ex: NVIDIA RTX 3060"
-                                    value={formData.gpu}
-                                    onChange={e => handleChange('gpu', e.target.value)}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="tipoRam">Tipo RAM</Label>
-                                    <Input
-                                        id="tipoRam"
-                                        placeholder="Ex: DDR4"
-                                        value={formData.tipoRam}
-                                        onChange={e => handleChange('tipoRam', e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="quantidadeRam">Qtd. RAM (GB)</Label>
-                                    <Input
-                                        id="quantidadeRam"
-                                        type="number"
-                                        placeholder="16"
-                                        value={formData.quantidadeRam}
-                                        onChange={e => handleChange('quantidadeRam', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="tipoArmazenamento">Tipo Armaz.</Label>
-                                    <Input
-                                        id="tipoArmazenamento"
-                                        placeholder="Ex: NVMe SSD"
-                                        value={formData.tipoArmazenamento}
-                                        onChange={e => handleChange('tipoArmazenamento', e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="quantidadeArmazenamento">Qtd. Armaz. (GB)</Label>
-                                    <Input
-                                        id="quantidadeArmazenamento"
-                                        type="number"
-                                        placeholder="512"
-                                        value={formData.quantidadeArmazenamento}
-                                        onChange={e => handleChange('quantidadeArmazenamento', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Financeiro e Status */}
-                    <Card className="lg:col-span-2">
-                        <CardHeader>
-                            <CardTitle>Financeiro & Status</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="valor">Valor (R$)</Label>
-                                    <Input
-                                        id="valor"
-                                        type="number"
-                                        step="0.01"
-                                        value={formData.valor}
-                                        onChange={e => handleChange('valor', e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="notaFiscal">ID Nota Fiscal</Label>
-                                    <Input
-                                        id="notaFiscal"
-                                        type="number"
-                                        placeholder="ID"
-                                        value={formData.notaFiscal}
-                                        onChange={e => handleChange('notaFiscal', e.target.value)}
-                                    />
-                                </div>
-
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="estado">Estado Conservação</Label>
                                     <Select
@@ -404,33 +232,17 @@ export default function EditAssetPage({ params }: PageProps) {
                                     </Select>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="data_aquisicao">Data Aquisição</Label>
-                                    <Input
-                                        id="data_aquisicao"
-                                        type="date"
-                                        value={formData.data_aquisicao}
-                                        onChange={e => handleChange('data_aquisicao', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
 
-                    {/* Observações */}
-                    <Card className="lg:col-span-2">
-                        <CardHeader>
-                            <CardTitle>Observações</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Textarea
-                                id="obs"
-                                placeholder="Observações..."
-                                className="min-h-[100px]"
-                                value={formData.descricao}
-                                onChange={e => handleChange('descricao', e.target.value)}
-                            />
+                            <div className="space-y-2">
+                                <Label htmlFor="obs">Observações</Label>
+                                <Textarea
+                                    id="obs"
+                                    placeholder="Observações..."
+                                    className="min-h-[150px]"
+                                    value={formData.descricao}
+                                    onChange={e => handleChange('descricao', e.target.value)}
+                                />
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

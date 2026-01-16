@@ -102,15 +102,22 @@ export interface NotaFiscal {
   id: number;
   numero: string;
   serie?: string;
-  chave_acesso?: string;
-  fornecedor: string;
-  cnpj_fornecedor?: string;
-  endereco_fornecedor?: string;
-  data_emissao: string;
-  data_entrada?: string;
-  data_entrega?: string;
-  valor_total: number;
-  arquivo_url?: string;
+  chaveAcesso?: string;
+  fornecedorNome: string;
+  fornecedorCnpj?: string;
+  fornecedorEndereco?: string;
+  dataEmissao: string;
+  dataEntrada?: string;
+  dataEntrega?: string;
+  valorTotal: number;
+
+  // File fields
+  nomeArquivo?: string;
+  caminhoArquivo?: string;
+  tipoArquivo?: string;
+  tamanhoArquivo?: number;
+
+  equipamentos?: Ativo[];
 }
 
 export interface ItemNF {
@@ -132,3 +139,5 @@ export interface Localizacao {
   nome: string;
   endereco?: string;
 }
+
+

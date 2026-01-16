@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Save, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,14 +11,22 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 
 import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/providers/notification-provider';
-import { mockNotasFiscais } from '@/lib/data';
+import { api, ENDPOINTS } from '@/services/api';
 
 export default function NewInvoicePage() {
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
     const [file, setFile] = useState<File | null>(null);
+    const [supplierNames, setSupplierNames] = useState<string[]>([]);
+    const [invoiceNumbers, setInvoiceNumbers] = useState<string[]>([]);
+
     const { addNotification } = useNotifications();
     const router = useRouter();
+
+    useEffect(() => {
+        api.get(ENDPOINTS.SUPPLIER_NAMES).then(setSupplierNames).catch(console.error);
+        api.get(ENDPOINTS.INVOICE_NUMBERS).then(setInvoiceNumbers).catch(console.error);
+    }, []);
 
     const handleAddItem = () => {
         setItems([...items, { descricao: '', qtd: 1, valor: 0 }]);
@@ -28,37 +36,53 @@ export default function NewInvoicePage() {
         e.preventDefault();
         setLoading(true);
 
-        // Get form data
-        const formData = new FormData(e.target as HTMLFormElement);
-        const numero = formData.get('numero') as string;
-        const fornecedor = formData.get('fornecedor') as string;
-        const valor_total = parseFloat(formData.get('valor_total') as string || '0');
-        const data_emissao = formData.get('data_emissao') as string;
+        try {
+            // Get form data
+            const formData = new FormData(e.target as HTMLFormElement);
 
-        // Create Blob URL for the file
-        const arquivo_url = file ? URL.createObjectURL(file) : '';
+            // Construct payload matching NotaFiscalRequest DTO
+            const payload = {
+                numero: (formData.get('numero') as string),
+                serie: (formData.get('serie') as string) || null,
+                dataEmissao: formData.get('data_emissao') as string,
+                dataEntrada: formData.get('data_entrada') as string,
+                valorTotal: parseFloat(formData.get('valor_total') as string || '0'),
+                fornecedorNome: (formData.get('fornecedor_nome') as string).trim(),
+                fornecedorCnpj: (formData.get('fornecedor_cnpj') as string) || null,
+                fornecedorEndereco: (formData.get('endereco_fornecedor') as string) || null,
+                chaveAcesso: (formData.get('chave_acesso') as string) || null,
+                observacoes: '',
+            };
 
-        await new Promise(resolve => setTimeout(resolve, 800));
+            // 1. Create Invoice
+            const createdInvoice = await api.post(ENDPOINTS.INVOICES, payload);
 
-        // Add to mock data
-        const newId = Math.max(...mockNotasFiscais.map(n => n.id)) + 1;
-        mockNotasFiscais.unshift({
-            id: newId,
-            numero,
-            fornecedor,
-            data_emissao,
-            valor_total,
-            arquivo_url
-        });
+            // 2. Upload File (if exists)
+            if (file && createdInvoice.id) {
+                const fileFormData = new FormData();
+                fileFormData.append('file', file);
 
-        addNotification({
-            title: 'Nova Nota Fiscal',
-            message: 'Uma nova NF foi registrada e processada.',
-            type: 'success'
-        });
+                await api.post(`${ENDPOINTS.INVOICES}/${createdInvoice.id}/anexo`, fileFormData);
+            }
 
-        setLoading(false);
-        router.push('/invoices');
+            addNotification({
+                title: 'Sucesso',
+                message: 'Nota Fiscal criada com sucesso.',
+                type: 'success'
+            });
+
+            router.push('/invoices');
+
+        } catch (error: any) {
+            console.error("Erro ao salvar nota fiscal:", error);
+            addNotification({
+                title: 'Erro',
+                message: error.message || 'Erro ao salvar a nota fiscal.',
+                type: 'error'
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -86,15 +110,20 @@ export default function NewInvoicePage() {
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="numero">Número NF</Label>
-                                    <Input id="numero" placeholder="000.000.000" required />
+                                    <Input id="numero" name="numero" placeholder="000.000.000" list="invoice-numbers" required />
+                                    <datalist id="invoice-numbers">
+                                        {invoiceNumbers.map((num, i) => (
+                                            <option key={i} value={num} />
+                                        ))}
+                                    </datalist>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="serie">Série</Label>
-                                    <Input id="serie" placeholder="1" />
+                                    <Input id="serie" name="serie" placeholder="1" />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
                                     <Label htmlFor="chave">Chave de Acesso</Label>
-                                    <Input id="chave" placeholder="44 dígitos..." />
+                                    <Input id="chave_acesso" name="chave_acesso" placeholder="44 dígitos..." />
                                 </div>
                             </div>
 
@@ -102,35 +131,47 @@ export default function NewInvoicePage() {
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="data_emissao">Data de Emissão</Label>
-                                    <Input id="data_emissao" type="date" required />
+                                    <Input id="data_emissao" name="data_emissao" type="date" required />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="data_entrada">Data de Entrada</Label>
-                                    <Input id="data_entrada" type="date" required />
+                                    <Input id="data_entrada" name="data_entrada" type="date" required />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="data_entrega">Data de Entrega</Label>
-                                    <Input id="data_entrega" type="date" />
+                                    <Input id="data_entrega" name="data_entrega" type="date" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="valor_total">Valor Total</Label>
-                                    <Input id="valor_total" placeholder="R$ 0,00" />
+                                    <Input id="valor_total" name="valor_total" placeholder="R$ 0,00" />
                                 </div>
                             </div>
 
                             {/* Linha 3: Fornecedor */}
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div className="space-y-2 md:col-span-2">
-                                    <Label htmlFor="fornecedor">Razão Social Fornecedor</Label>
-                                    <Input id="fornecedor" placeholder="Nome da empresa" required />
+                                    <Label htmlFor="fornecedor">Nome do Fornecedor</Label>
+                                    <Input
+                                        id="fornecedor_nome"
+                                        name="fornecedor_nome"
+                                        placeholder="Digite o nome ou selecione"
+                                        list="supplier-names"
+                                        required
+                                        autoComplete="off"
+                                    />
+                                    <datalist id="supplier-names">
+                                        {supplierNames.map((name, i) => (
+                                            <option key={i} value={name} />
+                                        ))}
+                                    </datalist>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="cnpj_fornecedor">CNPJ Fornecedor</Label>
-                                    <Input id="cnpj_fornecedor" placeholder="00.000.000/0000-00" />
+                                    <Label htmlFor="fornecedor_cnpj">CNPJ Fornecedor</Label>
+                                    <Input id="fornecedor_cnpj" name="fornecedor_cnpj" placeholder="00.000.000/0000-00" />
                                 </div>
                                 <div className="space-y-2 md:col-span-1">
                                     <Label htmlFor="endereco_fornecedor">Endereço Fornecedor</Label>
-                                    <Input id="endereco_fornecedor" placeholder="Endereço completo" />
+                                    <Input id="endereco_fornecedor" name="endereco_fornecedor" placeholder="Endereço completo" />
                                 </div>
                             </div>
 

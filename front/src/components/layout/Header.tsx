@@ -9,6 +9,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ModeToggle } from "@/components/theme/mode-toggle";
 import { mockAtivos, mockColaboradores, mockNotasFiscais } from '@/lib/data';
 
+// Função auxiliar para capitalizar primeira letra
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 export function Header() {
     // Search State
     const [searchQuery, setSearchQuery] = useState('');
@@ -80,6 +83,20 @@ export function Header() {
             default: return <Info className="h-4 w-4 text-blue-500" />;
         }
     };
+
+    const [currentDateTime, setCurrentDateTime] = useState(new Date());
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        const timer = setInterval(() => {
+            setCurrentDateTime(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const formattedDate = capitalize(currentDateTime.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
+    const formattedTime = currentDateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     return (
         <header className="h-16 border-b bg-background/60 backdrop-blur sticky top-0 z-20 px-6 flex items-center justify-between">
@@ -174,14 +191,21 @@ export function Header() {
                 )}
             </div>
 
-            <div className="flex items-center gap-2 ml-4">
+            <div className="flex items-center gap-4 ml-4">
+                <div className="flex flex-col items-end justify-center px-3 gap-0.5 mt-0.5 min-w-[140px]">
+                    {mounted ? (
+                        <>
+                            <span className="text-xs font-bold text-foreground/80 uppercase tracking-wider">{formattedDate}</span>
+                            <span className="text-xs font-semibold text-muted-foreground">{formattedTime}</span>
+                        </>
+                    ) : (
+                        <div className="h-8 w-32 bg-muted/20 animate-pulse rounded"></div>
+                    )}
+                </div>
+
                 <ModeToggle />
 
                 <div className="flex items-center gap-3">
-                    <div className="text-right hidden md:block">
-                        <p className="text-sm font-medium">Admin User</p>
-                        <p className="text-xs text-muted-foreground">Gestor de TI</p>
-                    </div>
                     <Link href="/login">
                         <Button variant="ghost" size="icon" className="rounded-full" title="Sair">
                             <LogOut size={20} className="text-muted-foreground hover:text-primary transition-colors" />

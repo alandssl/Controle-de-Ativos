@@ -143,11 +143,8 @@ export default function EmployeesPage() {
                     <p className="text-sm text-muted-foreground">Gerencie o quadro de funcionários.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                        <FileDown className="mr-2 h-4 w-4" />
-                        Exportar
-                    </Button>
-                    <Link href="/employees/new">
+
+                    <Link href="/employees/new" className='no-underline'>
                         <Button size="sm">
                             <Plus className="mr-2 h-4 w-4" />
                             Novo Colaborador

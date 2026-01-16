@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     Search, Plus,
-    Eye, Settings2, Paperclip, AlertTriangle
+    Eye, Settings2, Paperclip, AlertTriangle, X, Upload
 } from 'lucide-react';
 import { useNotifications } from '@/providers/notification-provider';
 
@@ -29,11 +30,13 @@ import { SortIcon } from '@/components/ui/sort-icon';
 import { Movimentacao, Ativo, Colaborador } from '@/types';
 import { api, ENDPOINTS } from '@/services/api';
 
-export default function MovementsPage() {
+
+function MovementsContent() {
     const searchParams = useSearchParams();
     const assetIdFilter = searchParams.get('assetId');
 
     const [searchTerm, setSearchTerm] = useState('');
+    const [mounted, setMounted] = useState(false);
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [visibleColumns, setVisibleColumns] = useState({
         tipo: true,
@@ -58,29 +61,113 @@ export default function MovementsPage() {
         { label: 'Descarte', value: 'Descarte' },
     ];
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setError(null);
 
-                const [movData, ativosData, colabData] = await Promise.all([
-                    api.get(ENDPOINTS.MOVEMENTS),
-                    api.get(ENDPOINTS.ASSETS),
-                    api.get(ENDPOINTS.EMPLOYEES),
-                ]);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [selectedUploadId, setSelectedUploadId] = useState<number | null>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
-                setMovimentacoes(movData.content ?? movData);
-                setAtivos(ativosData.content ?? ativosData);
-                setColaboradores(colabData.content ?? colabData);
-            } catch (e: any) {
-                setError(e.message);
-            } finally {
-                setLoading(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+            if (!isPdf) {
+                addNotification({ type: 'error', title: 'Erro', message: 'Por favor, selecione apenas arquivos PDF.' });
+                return;
             }
-        };
+            setSelectedFile(file);
+            setIsUploadModalOpen(true);
+        }
+    };
 
+
+
+    const fetchData = async () => {
+        try {
+            setError(null);
+            const [movData, ativosData, colabData] = await Promise.all([
+                api.get(ENDPOINTS.MOVEMENTS),
+                api.get(ENDPOINTS.ASSETS),
+                api.get(ENDPOINTS.EMPLOYEES),
+            ]);
+
+            setMovimentacoes(movData.content ?? movData);
+            setAtivos(ativosData.content ?? ativosData);
+            setColaboradores(colabData.content ?? colabData);
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAbrirAnexo = (id: number) => {
+        window.open(
+            `http://localhost:8080/api/movimentos/${id}/anexo`,
+            '_blank'
+        );
+    };
+
+
+    useEffect(() => {
+        setMounted(true);
         fetchData();
     }, []);
+
+    // --- LOGICA DE UPLOAD CORRIGIDA ---
+    const handleUpload = async () => {
+        if (!selectedUploadId || !selectedFile) return;
+
+        setIsUploading(true);
+        const formData = new FormData();
+        // O nome 'file' aqui deve ser o mesmo esperado no @RequestParam do seu Controller Java
+        formData.append('file', selectedFile);
+
+        try {
+
+            // Importante: NÃO definimos headers de Content-Type. 
+            // O navegador faz isso automaticamente para Multipart/form-data incluindo o boundary.
+            const res = await fetch(`http://localhost:8080/api/movimentos/${selectedUploadId}/anexo`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!res.ok) {
+                if (res.status === 0 || !res.status) {
+                    throw new Error('Erro de conexão ou CORS. Reinicie o backend Java.');
+                }
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || `Erro ${res.status}: Falha ao enviar anexo.`);
+            }
+
+            addNotification({
+                type: 'success',
+                title: 'Sucesso',
+                message: 'Comprovante anexado e salvo com sucesso!'
+            });
+            setIsUploadModalOpen(false);
+            setSelectedFile(null);
+
+            // Recarrega os dados para atualizar os status e ícones na tabela
+            await fetchData();
+
+        } catch (error: any) {
+            const msg = error.message && error.message.includes('Failed to fetch')
+                ? 'Falha na conexão (Possível erro de CORS ou Backend desligado). Reinicie o backend.'
+                : (error.message || 'Erro desconhecido no upload.');
+
+            addNotification({
+                type: 'error',
+                title: 'Erro no Upload',
+                message: msg
+            });
+            console.error("Upload Error:", error);
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
 
 
@@ -96,7 +183,6 @@ export default function MovementsPage() {
                 data: mov.dataMovimento,
                 id_ativo: mov.idEquipamento?.id,
                 id_colaborador: mov.idColaborador?.id,
-                // Lógica de Negócio: Sem colaborador = Recebimento (Volta pro Estoque); Com colaborador = Entrega (Saiu do Estoque)
                 tipo_desc: mov.tipoMovimento || (isStock ? 'Entrada' : 'Saida'),
                 asset,
                 employee: isStock ? { nome: 'ESTOQUE TI', setor: '-' } as any : employee,
@@ -157,7 +243,6 @@ export default function MovementsPage() {
         );
     };
 
-    // --- Renderização ---
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -166,7 +251,7 @@ export default function MovementsPage() {
                     <p className="text-sm text-muted-foreground">Histórico de entregas e devoluções de equipamentos.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Link href="/movements/new">
+                    <Link href="/movements/new" className='no-underline'>
                         <Button>
                             <Plus className="mr-2 h-4 w-4" />
                             Adicionar Movimento
@@ -245,7 +330,7 @@ export default function MovementsPage() {
                             <strong>Erro ao carregar dados:</strong> {error}
                         </div>
                         <div className="text-red-600 text-xs mt-1">
-                            Verifique se a API Java está rodando em http://localhost:8080 e se as rotas estão corretas.
+                            Verifique se a API Java está rodando em http://localhost:8080.
                         </div>
                     </div>
                 )}
@@ -318,29 +403,27 @@ export default function MovementsPage() {
                                     </TableRow>
                                 ) : (
                                     sortedMovements.map((item) => (
-                                        <TableRow
-                                            key={item.id}
-                                        >
+                                        <TableRow key={item.id}>
                                             {visibleColumns.tipo && (
                                                 <TableCell className="text-center">
-                                                    <div className="flex justify-center items-center gap-2">
-                                                        {item.tipo_desc === 'Saida' && !item.anexo && (
-                                                            <div className="h-4 w-4" />
-                                                        )}
-                                                        <Badge
-                                                            variant={item.tipo_desc === 'Saida' ? 'default' : 'secondary'}
-                                                            className="px-3"
-                                                        >
-                                                            {item.tipo_desc === 'Saida' ? 'Entrega' : 'Recebimento'}
-                                                        </Badge>
-                                                        {item.tipo_desc === 'Saida' && !item.anexo && (
-                                                            <div className="relative group flex items-center font-normal">
-                                                                <AlertTriangle className="h-4 w-4 text-orange-500 animate-alert-blink cursor-help" />
-                                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-md whitespace-nowrap">
-                                                                    Movimento incompleto, insira o anexo
-                                                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <div className="flex items-center justify-center">
+                                                            <Badge
+                                                                variant={item.tipo_desc === 'Saida' ? 'default' : 'secondary'}
+                                                                className="px-3"
+                                                            >
+                                                                {item.tipo_desc === 'Saida' ? 'Entrega' : 'Recebimento'}
+                                                            </Badge>
+                                                            {item.tipo_desc === 'Saida' && (!item.anexo || item.anexo === 'NAO') && (
+                                                                <div className="w-0 overflow-visible flex items-center">
+                                                                    <AlertTriangle className="ml-2 h-4 w-4 text-orange-500 animate-alert-blink shrink-0" />
                                                                 </div>
-                                                            </div>
+                                                            )}
+                                                        </div>
+                                                        {item.tipo_desc === 'Saida' && (!item.anexo || item.anexo === 'NAO') && (
+                                                            <span className="text-xs text-orange-600 font-medium">
+                                                                Movimento incompleto, insira o anexo
+                                                            </span>
                                                         )}
                                                     </div>
                                                 </TableCell>
@@ -379,12 +462,26 @@ export default function MovementsPage() {
                                                         </Button>
                                                     </Link>
                                                     {item.tipo_desc === 'Saida' && (
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-gray-900" title={item.anexo ? "Ver Anexo" : "Inserir Anexo"}>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-gray-500 hover:text-gray-900"
+                                                            title={item.anexo === 'SIM' ? "Ver Anexo" : "Inserir Anexo"}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                if (item.anexo === 'SIM') {
+                                                                    handleAbrirAnexo(item.id);
+                                                                } else {
+                                                                    setSelectedUploadId(item.id);
+                                                                    if (fileInputRef.current) fileInputRef.current.value = '';
+                                                                    fileInputRef.current?.click();
+                                                                }
+                                                            }}
+                                                        >
                                                             <Paperclip className="h-4 w-4" />
                                                         </Button>
                                                     )}
-                                                    {/* Botões de Editar e Excluir Removidos */}
-                                                    {/* Botão de Excluir Removido */}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -395,6 +492,76 @@ export default function MovementsPage() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+
+            <input
+                type="file"
+                ref={fileInputRef}
+                // className="hidden"
+                accept=".pdf"
+                style={{ display: 'none' }}
+                onChange={handleFileSelect}
+            />
+
+            {
+                isUploadModalOpen && mounted && createPortal(
+                    <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
+                        <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900">Confirmar Envio</h3>
+                                <button onClick={() => {
+                                    setIsUploadModalOpen(false);
+                                    setSelectedFile(null);
+                                }} className="text-gray-500 hover:text-gray-700">
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="flex flex-col items-center gap-4 p-6 bg-gray-50 rounded-lg border border-gray-100">
+                                    <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center">
+                                        <span className="text-3xl">📄</span>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="font-medium text-gray-900 break-all">{selectedFile?.name}</p>
+                                        <p className="text-sm text-gray-500">{(selectedFile?.size ? (selectedFile.size / 1024 / 1024).toFixed(2) : 0)} MB</p>
+                                    </div>
+                                </div>
+
+                                <p className="text-sm text-gray-600 text-center">
+                                    Deseja anexar este arquivo PDF à movimentação?
+                                </p>
+
+                                <div className="flex gap-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => { setIsUploadModalOpen(false); setSelectedFile(null); }}
+                                        className="flex-1"
+                                        disabled={isUploading}
+                                    >
+                                        Cancelar
+                                    </Button>
+                                    <Button
+                                        onClick={handleUpload}
+                                        disabled={!selectedFile || isUploading}
+                                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                    >
+                                        {isUploading ? 'Enviando...' : 'Confirmar Anexo'}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
+                )
+            }
+        </div >
+    );
+}
+
+export default function MovementsPage() {
+    return (
+        <React.Suspense fallback={<div>Carregando...</div>}>
+            <MovementsContent />
+        </React.Suspense>
     );
 }

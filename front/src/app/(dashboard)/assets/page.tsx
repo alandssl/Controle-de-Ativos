@@ -219,13 +219,10 @@ export default function AssetsPage() {
                     <p className="text-sm text-muted-foreground">Gerencie todo o inventário de equipamentos.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                        <FileDown className="mr-2 h-4 w-4" />
-                        Exportar
-                    </Button>
-                    <Link href="/assets/new">
-                        <Button size="sm">
-                            <Plus className="mr-2 h-4 w-4" />
+
+                    <Link href="/assets/new" className='no-underline'>
+                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+                            <Plus className="h-4 w-4" />
                             Novo Ativo
                         </Button>
                     </Link>

@@ -16,8 +16,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.pca.dto.EquipamentoRequest;
 import com.pca.model.Equipamento;
+import com.pca.repository.NotaFiscalRepository;
 import com.pca.repository.StatusRepository;
-import com.pca.repository.notaFiscalRepository;
 import com.pca.repository.tipoEquipamentoRepository;
 import com.pca.repository.tipoEstadoRepository;
 import com.pca.service.EquipamentoService;
@@ -33,7 +33,7 @@ public class EquipamentoController {
         private final EquipamentoService service;
         private final tipoEstadoRepository tipoEstadoRepository;
         private final tipoEquipamentoRepository tipoEquipamentoRepository;
-        private final notaFiscalRepository notaFiscalRepository;
+        private final NotaFiscalRepository notaFiscalRepository;
         private final StatusRepository statusRepository;
 
         @GetMapping
@@ -44,7 +44,7 @@ public class EquipamentoController {
         @PostMapping
         public ResponseEntity<Equipamento> cadastrar(@Valid @RequestBody EquipamentoRequest request) {
                 Equipamento equipamento = convertToEntity(request);
-                Equipamento salvo = service.cadastrar(equipamento, request.responsavelId());
+                Equipamento salvo = service.cadastrar(equipamento, request.responsavelId(), request.novaNotaFiscal());
                 URI location = ServletUriComponentsBuilder
                                 .fromCurrentRequest()
                                 .path("/{id}")
@@ -63,33 +63,55 @@ public class EquipamentoController {
 
         private Equipamento convertToEntity(EquipamentoRequest request) {
 
-                String estado = request.estado().trim().toUpperCase();
-                String tipoEquip = request.tipoEquipamento().trim().toUpperCase();
+                String estado = (request.estado() != null && !request.estado().isEmpty())
+                                ? request.estado().trim().toUpperCase()
+                                : null;
+                String tipoEquip = (request.tipoEquipamento() != null && !request.tipoEquipamento().isEmpty())
+                                ? request.tipoEquipamento().trim().toUpperCase()
+                                : null;
+
+                if (estado == null || tipoEquip == null) {
+                        throw new IllegalArgumentException("Estado e Tipo de Equipamento são obrigatórios.");
+                }
 
                 return Equipamento.builder()
-                        .estado(tipoEstadoRepository.findById(estado)
-                        .orElseThrow(() -> new IllegalArgumentException("Estado inválido: " + estado)))
-                        .tipoEquipamento( tipoEquipamentoRepository.findById(tipoEquip)
-                        .orElseThrow(() -> new IllegalArgumentException("Tipo equipamento inválido: " + tipoEquip)))
-                        .notaFiscal(request.notaFiscal() != null? notaFiscalRepository
-                        .findById(request.notaFiscal())
-                        .orElse(null): null)
-                        .status(request.status() != null ? statusRepository.findById(request.status())
-                        .orElse(null): null)
-                        .fabricante(request.fabricante())
-                        .etiqueta(request.etiqueta())
-                        .tec(request.tec())
-                        .patrimonio(request.patrimonio())
-                        .modelo(request.modelo())
-                        .gpu(request.gpu())
-                        .tipoRam(request.tipoRam())
-                        .quantidadeRam(request.quantidadeRam())
-                        .tipoArmazenamento(request.tipoArmazenamento())
-                        .quantidadeArmazenamento(request.quantidadeArmazenamento())
-                        .descricao(request.descricao())
-                        .valor(request.valor())
-                        .data_aquisicao(request.dataAquisicao() != null ? request.dataAquisicao().atStartOfDay():null)
-                        .build();
+                                .estado(tipoEstadoRepository.findById(estado)
+                                                .orElseThrow(() -> new IllegalArgumentException(
+                                                                "Estado inválido: " + estado)))
+                                .tipoEquipamento(tipoEquipamentoRepository.findById(tipoEquip)
+                                                .orElseThrow(() -> new IllegalArgumentException(
+                                                                "Tipo equipamento inválido: " + tipoEquip)))
+                                .notaFiscal(request.notaFiscal() != null ? notaFiscalRepository
+                                                .findById(request.notaFiscal())
+                                                .orElse(null) : null)
+                                .status(request.status() != null ? statusRepository.findById(request.status())
+                                                .orElse(null) : null)
+                                .fabricante(request.fabricante())
+                                .etiqueta(request.etiqueta())
+                                .tec(request.tec())
+                                .patrimonio(request.patrimonio())
+                                .modelo(request.modelo())
+                                .gpu(request.gpu())
+                                .tipoRam(request.tipoRam())
+                                .quantidadeRam(request.quantidadeRam())
+                                .tipoArmazenamento(request.tipoArmazenamento())
+                                .quantidadeArmazenamento(request.quantidadeArmazenamento())
+                                .descricao(request.descricao())
+                                .valor(request.valor())
+                                .data_aquisicao(request.dataAquisicao() != null ? request.dataAquisicao().atStartOfDay()
+                                                : null)
+                                .imeiCelular(request.imeiCelular())
+                                .build();
+        }
+
+        @GetMapping("/status")
+        public List<com.pca.model.Status> listarStatus() {
+                return statusRepository.findAll();
+        }
+
+        @GetMapping("/tipo-estados")
+        public List<com.pca.model.TipoEstado> listarTipoEstados() {
+                return tipoEstadoRepository.findAll();
         }
 
 }

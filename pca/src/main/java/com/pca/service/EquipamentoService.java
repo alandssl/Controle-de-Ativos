@@ -14,14 +14,41 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EquipamentoService {
     private final EquipamentoRepository repository;
+    private final com.pca.repository.NotaFiscalRepository notaFiscalRepository;
     private final com.pca.repository.MovimentoRepository movimentoRepository;
     private final com.pca.repository.ColaboradorRepository colaboradorRepository;
 
     @Transactional
-    public Equipamento cadastrar(Equipamento equipamento, Long responsavelId) {
+    public Equipamento cadastrar(Equipamento equipamento, Long responsavelId,
+            com.pca.dto.NotaFiscalRequest novaNotaFiscal) {
         if (equipamento.getEstado() == null) {
             throw new IllegalArgumentException("Estado do equipamento é obrigatório");
         }
+
+        if (novaNotaFiscal != null) {
+            com.pca.model.NotaFiscal nf = com.pca.model.NotaFiscal.builder()
+                    .numero(novaNotaFiscal.numero())
+                    .serie(novaNotaFiscal.serie())
+                    .dataEmissao(novaNotaFiscal.dataEmissao())
+                    .dataEntrada(novaNotaFiscal.dataEntrada())
+                    .valorTotal(novaNotaFiscal.valorTotal())
+                    .fornecedorNome(novaNotaFiscal.fornecedorNome())
+                    .fornecedorCnpj(
+                            novaNotaFiscal.fornecedorCnpj() != null && !novaNotaFiscal.fornecedorCnpj().isBlank()
+                                    ? novaNotaFiscal.fornecedorCnpj()
+                                    : null)
+                    .fornecedorEndereco(novaNotaFiscal.fornecedorEndereco())
+                    .chaveAcesso(novaNotaFiscal.chaveAcesso() != null && !novaNotaFiscal.chaveAcesso().isBlank()
+                            ? novaNotaFiscal.chaveAcesso()
+                            : null)
+                    .observacoes(novaNotaFiscal.observacoes())
+                    .createdAt(java.time.LocalDateTime.now())
+                    .build();
+
+            nf = notaFiscalRepository.save(nf);
+            equipamento.setNotaFiscal(nf);
+        }
+
         Equipamento salvo = repository.save(equipamento);
 
         if (responsavelId != null) {
@@ -66,44 +93,29 @@ public class EquipamentoService {
 
     @Transactional
     public Equipamento atualizar(Long id, Equipamento atualizado) {
-        Equipamento existente = buscarPorId(id);
+        Equipamento existente = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Equipamento não encontrado"));
 
-        // Atualiza campos
-        if (atualizado.getPatrimonio() != null)
-            existente.setPatrimonio(atualizado.getPatrimonio());
-        if (atualizado.getEstado() != null)
-            existente.setEstado(atualizado.getEstado());
-        if (atualizado.getTipoEquipamento() != null)
-            existente.setTipoEquipamento(atualizado.getTipoEquipamento());
-        if (atualizado.getNotaFiscal() != null)
-            existente.setNotaFiscal(atualizado.getNotaFiscal());
-        if (atualizado.getStatus() != null)
-            existente.setStatus(atualizado.getStatus());
-        if (atualizado.getFabricante() != null)
-            existente.setFabricante(atualizado.getFabricante());
-        if (atualizado.getEtiqueta() != null)
-            existente.setEtiqueta(atualizado.getEtiqueta());
-        if (atualizado.getTec() != null)
-            existente.setTec(atualizado.getTec());
-        if (atualizado.getModelo() != null)
-            existente.setModelo(atualizado.getModelo());
-        if (atualizado.getGpu() != null)
-            existente.setGpu(atualizado.getGpu());
-        if (atualizado.getTipoRam() != null)
-            existente.setTipoRam(atualizado.getTipoRam());
-        if (atualizado.getQuantidadeRam() != null)
-            existente.setQuantidadeRam(atualizado.getQuantidadeRam());
-        if (atualizado.getTipoArmazenamento() != null)
-            existente.setTipoArmazenamento(atualizado.getTipoArmazenamento());
-        if (atualizado.getQuantidadeArmazenamento() != null)
-            existente.setQuantidadeArmazenamento(atualizado.getQuantidadeArmazenamento());
-        if (atualizado.getDescricao() != null)
-            existente.setDescricao(atualizado.getDescricao());
-        if (atualizado.getValor() != null)
-            existente.setValor(atualizado.getValor());
-        if (atualizado.getData_aquisicao() != null)
-            existente.setData_aquisicao(atualizado.getData_aquisicao());
+        existente.setEstado(atualizado.getEstado());
+        existente.setTipoEquipamento(atualizado.getTipoEquipamento());
+        existente.setNotaFiscal(atualizado.getNotaFiscal());
+        existente.setStatus(atualizado.getStatus());
+        existente.setFabricante(atualizado.getFabricante());
+        existente.setEtiqueta(atualizado.getEtiqueta());
+        existente.setTec(atualizado.getTec());
+        existente.setPatrimonio(atualizado.getPatrimonio());
+        existente.setModelo(atualizado.getModelo());
+        existente.setGpu(atualizado.getGpu());
+        existente.setTipoRam(atualizado.getTipoRam());
+        existente.setQuantidadeRam(atualizado.getQuantidadeRam());
+        existente.setTipoArmazenamento(atualizado.getTipoArmazenamento());
+        existente.setQuantidadeArmazenamento(atualizado.getQuantidadeArmazenamento());
+        existente.setDescricao(atualizado.getDescricao());
+        existente.setValor(atualizado.getValor());
+        existente.setData_aquisicao(atualizado.getData_aquisicao());
+        existente.setImeiCelular(atualizado.getImeiCelular());
 
         return repository.save(existente);
     }
+
 }

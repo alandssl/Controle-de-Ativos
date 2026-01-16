@@ -26,11 +26,11 @@ import lombok.NoArgsConstructor;
 @Table(name = "equipamentos")
 
 public class Equipamento {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     // Relacionamento com tipoEstado
     @ManyToOne
     @JoinColumn(name = "estado", referencedColumnName = "estado_tipo")
@@ -43,6 +43,7 @@ public class Equipamento {
 
     // Relacionamento com NFs
     @ManyToOne
+    @com.fasterxml.jackson.annotation.JsonBackReference
     @JoinColumn(name = "nota_fiscal_id", referencedColumnName = "id")
     private NotaFiscal notaFiscal;
 
@@ -80,7 +81,7 @@ public class Equipamento {
     private String descricao;
 
     @ManyToOne
-    @JoinColumn(name="status")
+    @JoinColumn(name = "status")
     private Status status;
 
     @Column
@@ -89,30 +90,29 @@ public class Equipamento {
     @Column(precision = 10, scale = 2)
     private BigDecimal valor;
 
-    @Column(name="data_aquisição")
+    @Column(name = "data_aquisição")
     private LocalDateTime data_aquisicao;
 
-    @Column(name="created_at", nullable=false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name="update_at")
+    @Column(name = "update_at")
     private LocalDateTime updateAt;
 
-    @Column(name="exluded_at")
+    @Column(name = "exluded_at")
     private LocalDateTime excludedAt;
 
-    @Column(name="imei_celular")
+    @Column(name = "imei_celular")
     private String imeiCelular;
-    
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
 
-     @PreUpdate
+    @PreUpdate
     public void preUpdate() {
         updateAt = LocalDateTime.now();
     }
-
 
 }

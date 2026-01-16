@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
     Search, Receipt, Plus, FileText,
-    Eye, Settings2, Trash2
+    Eye, Settings2, Download
 } from 'lucide-react';
 
 // Componentes de UI
@@ -67,37 +67,17 @@ export default function InvoicesPage() {
 
     // --- Auxiliares / Filtros ---
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Tem certeza que deseja excluir esta nota fiscal?')) return;
 
-        try {
-            await api.delete(`${ENDPOINTS.INVOICES}/${id}`);
-
-            setNotasFiscais(prev => prev.filter(nf => nf.id !== id));
-            addNotification({
-                title: 'Sucesso',
-                message: 'Nota fiscal excluída com sucesso.',
-                type: 'success'
-            });
-        } catch (error) {
-            console.error("Erro ao excluir:", error);
-            addNotification({
-                title: 'Erro',
-                message: 'Não foi possível excluir a nota fiscal.',
-                type: 'error'
-            });
-        }
-    };
 
     // Extrair fornecedores únicos para opções de filtro
-    const suppliers = Array.from(new Set(notasFiscais.map(nf => nf.fornecedor)))
+    const suppliers = Array.from(new Set(notasFiscais.map(nf => nf.fornecedorNome)))
         .map(supplier => ({ label: supplier, value: supplier }));
 
     const filteredNFs = notasFiscais.filter(nf => {
         const matchesSearch = nf.numero.includes(searchTerm) ||
-            nf.fornecedor.toLowerCase().includes(searchTerm.toLowerCase());
+            nf.fornecedorNome.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesSupplier = selectedSuppliers.length === 0 || selectedSuppliers.includes(nf.fornecedor);
+        const matchesSupplier = selectedSuppliers.length === 0 || selectedSuppliers.includes(nf.fornecedorNome);
 
         return matchesSearch && matchesSupplier;
     });
@@ -112,13 +92,13 @@ export default function InvoicesPage() {
             case 'numero':
                 valueA = a.numero; valueB = b.numero; break;
             case 'fornecedor':
-                valueA = a.fornecedor; valueB = b.fornecedor; break;
+                valueA = a.fornecedorNome; valueB = b.fornecedorNome; break;
             case 'data':
-                valueA = new Date(a.data_emissao).getTime();
-                valueB = new Date(b.data_emissao).getTime();
+                valueA = new Date(a.dataEmissao).getTime();
+                valueB = new Date(b.dataEmissao).getTime();
                 break;
             case 'valor':
-                valueA = a.valor_total; valueB = b.valor_total; break;
+                valueA = a.valorTotal; valueB = b.valorTotal; break;
             default:
                 return 0;
         }
@@ -145,7 +125,7 @@ export default function InvoicesPage() {
                     <h1 className="text-2xl font-bold tracking-tight">Notas Fiscais</h1>
                     <p className="text-sm text-muted-foreground">Gerencie as NFs e associe ativos às compras.</p>
                 </div>
-                <Link href="/invoices/new">
+                <Link href="/invoices/new" className='no-underline'>
                     <Button>
                         <Plus className="mr-2 h-4 w-4" />
                         Nova Nota Fiscal
@@ -307,33 +287,29 @@ export default function InvoicesPage() {
                                                 </TableCell>
                                             )}
                                             {visibleColumns.fornecedor && (
-                                                <TableCell className="text-center">{nf.fornecedor}</TableCell>
+                                                <TableCell className="text-center">{nf.fornecedorNome}</TableCell>
                                             )}
                                             {visibleColumns.data && (
                                                 <TableCell className="text-center">
                                                     <div className="flex justify-center">
-                                                        {new Date(nf.data_emissao).toLocaleDateString()}
+                                                        {new Date(nf.dataEmissao).toLocaleDateString()}
                                                     </div>
                                                 </TableCell>
                                             )}
                                             {visibleColumns.valor && (
                                                 <TableCell className="text-center">
-                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(nf.valor_total)}
+                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(nf.valorTotal)}
                                                 </TableCell>
                                             )}
                                             {visibleColumns.arquivo && (
                                                 <TableCell className="text-center bg-muted/50">
-                                                    {nf.arquivo_url ? (
-                                                        <div className="flex justify-center">
-                                                            <Link href={nf.arquivo_url} target="_blank" rel="noopener noreferrer">
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8" title="Visualizar PDF">
-                                                                    <FileText className="h-4 w-4 text-red-500" />
-                                                                </Button>
-                                                            </Link>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-muted-foreground text-xs font-medium">-</span>
-                                                    )}
+                                                    <div className="flex justify-center">
+                                                        <Link href={`http://localhost:8080/api/notas-fiscais/arquivo/${nf.id}`} target="_blank" rel="noopener noreferrer">
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8" title={`Baixar ${nf.id}`}>
+                                                                <FileText className="h-4 w-4 text-red-500" />
+                                                            </Button>
+                                                        </Link>
+                                                    </div>
                                                 </TableCell>
                                             )}
                                             <TableCell className="text-center bg-muted/50">
@@ -343,15 +319,6 @@ export default function InvoicesPage() {
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                        title="Excluir"
-                                                        onClick={() => handleDelete(nf.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>

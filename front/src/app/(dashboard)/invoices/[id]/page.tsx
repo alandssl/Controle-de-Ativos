@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FileText, Package } from 'lucide-react';
@@ -7,14 +8,36 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { mockNotasFiscais, mockItemsNF } from '@/lib/data';
+import { api, ENDPOINTS } from '@/services/api';
+import { NotaFiscal } from '@/types';
 
 export default function InvoiceDetailsPage() {
     const params = useParams();
     const id = Number(params.id);
+    const [invoice, setInvoice] = useState<NotaFiscal | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    const invoice = mockNotasFiscais.find(nf => nf.id === id);
-    const items = mockItemsNF.filter(item => item.id_nf === id);
+    useEffect(() => {
+        const fetchInvoice = async () => {
+            try {
+                const data = await api.get(`${ENDPOINTS.INVOICES}/${id}`);
+                setInvoice(data);
+            } catch (error) {
+                console.error("Erro ao buscar nota fiscal:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchInvoice();
+    }, [id]);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-96">
+                <p className="text-muted-foreground">Carregando detalhes da nota fiscal...</p>
+            </div>
+        );
+    }
 
     if (!invoice) {
         return (
@@ -42,17 +65,17 @@ export default function InvoiceDetailsPage() {
                     <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
                         Nota Fiscal {invoice.numero}
                         <Badge variant="outline" className="ml-2">
-                            {invoice.fornecedor}
+                            {invoice.fornecedorNome}
                         </Badge>
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Emitida em {new Date(invoice.data_emissao).toLocaleDateString()}
+                        Emitida em {new Date(invoice.dataEmissao).toLocaleDateString()}
                     </p>
                 </div>
                 <div className="text-right">
                     <span className="text-sm text-muted-foreground block">Valor Total</span>
                     <span className="text-2xl font-bold">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(invoice.valor_total)}
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(invoice.valorTotal)}
                     </span>
                 </div>
             </div>
@@ -61,7 +84,7 @@ export default function InvoiceDetailsPage() {
                 <CardHeader>
                     <div className="flex items-center gap-2">
                         <Package className="h-5 w-5 text-primary" />
-                        <CardTitle>Itens da Nota</CardTitle>
+                        <CardTitle>Itens da Nota (Equipamentos)</CardTitle>
                     </div>
                     <CardDescription>Produtos e equipamentos vinculados a esta nota.</CardDescription>
                 </CardHeader>
@@ -69,6 +92,7 @@ export default function InvoiceDetailsPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead>Patrimônio</TableHead>
                                 <TableHead>Descrição</TableHead>
                                 <TableHead className="w-[100px] text-center">Qtd</TableHead>
                                 <TableHead className="w-[150px] text-right">Valor Unit.</TableHead>
@@ -76,21 +100,22 @@ export default function InvoiceDetailsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {items.length > 0 ? items.map((item) => (
+                            {invoice.equipamentos && invoice.equipamentos.length > 0 ? invoice.equipamentos.map((item) => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="font-medium">{item.descricao}</TableCell>
-                                    <TableCell className="text-center">{item.quantidade}</TableCell>
+                                    <TableCell className="font-medium">{item.patrimonio}</TableCell>
+                                    <TableCell>{item.descricao || item.modelo}</TableCell>
+                                    <TableCell className="text-center">1</TableCell>
                                     <TableCell className="text-right">
-                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor_unitario)}
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor || 0)}
                                     </TableCell>
                                     <TableCell className="text-right font-medium">
-                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.quantidade * item.valor_unitario)}
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor || 0)}
                                     </TableCell>
                                 </TableRow>
                             )) : (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                        Nenhum item cadastrado para esta nota.
+                                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                        Nenhum equipamento vinculado a esta nota.
                                     </TableCell>
                                 </TableRow>
                             )}

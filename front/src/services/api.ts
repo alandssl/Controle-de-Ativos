@@ -21,10 +21,13 @@ export const api = {
     },
     post: async (endpoint: string, data: any) => {
         try {
+            const isFormData = data instanceof FormData;
+            const headers: Record<string, string> = isFormData ? {} : { 'Content-Type': 'application/json' };
+
             const res = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                headers: headers as any,
+                body: isFormData ? data : JSON.stringify(data),
             });
             if (!res.ok) {
                 try {
@@ -34,7 +37,13 @@ export const api = {
                     throw new Error(`API Error: ${res.status}`);
                 }
             }
-            return res.json();
+            // Retorna text se não for JSON, ou tenta parsear
+            const text = await res.text();
+            try {
+                return JSON.parse(text);
+            } catch {
+                return text;
+            }
         } catch (error) {
             console.error(`Post failed for ${endpoint}:`, error);
             throw error;
@@ -90,4 +99,8 @@ export const ENDPOINTS = {
     INVOICES: '/notas-fiscais',
     CATEGORIES: '/categorias',
     LOCATIONS: '/localizacoes',
+    STATUS: '/equipamentos/status',
+    TIPO_ESTADOS: '/equipamentos/tipo-estados',
+    SUPPLIER_NAMES: '/notas-fiscais/fornecedores',
+    INVOICE_NUMBERS: '/notas-fiscais/numeros',
 };

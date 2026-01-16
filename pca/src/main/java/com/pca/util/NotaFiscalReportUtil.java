@@ -35,10 +35,12 @@ public class NotaFiscalReportUtil {
         table.addCell("Descrição");
         table.addCell("Valor");
 
-        for (Equipamento eq : nota.getEquipamentos()) {
-            table.addCell(String.valueOf(eq.getId()));
-            table.addCell(eq.getDescricao());
-            table.addCell(eq.getValor().toString());
+        if (nota.getEquipamentos() != null) {
+            for (Equipamento eq : nota.getEquipamentos()) {
+                table.addCell(String.valueOf(eq.getId()));
+                table.addCell(eq.getDescricao() != null ? eq.getDescricao() : "");
+                table.addCell(eq.getValor() != null ? eq.getValor().toString() : "0.00");
+            }
         }
 
         document.add(table);

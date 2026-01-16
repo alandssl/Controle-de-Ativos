@@ -50,39 +50,54 @@ public class NotaFiscal {
     @Column(name = "fornecedor_nome", length = 150, nullable = false)
     private String fornecedorNome;
 
-    @Column(name = "fornecedor_cnpj", length = 18, nullable = false)
+    @Column(name = "fornecedor_cnpj", length = 18)
     private String fornecedorCnpj;
 
     @Column(name = "fornecedor_endereco", length = 255)
     private String fornecedorEndereco;
 
     // --- Dados da NFe ---
-    @Column(name = "chave_acesso", length = 44, unique = true, nullable = false)
+    @Column(name = "chave_acesso", length = 44, unique = true)
     private String chaveAcesso;
 
     @Column(name = "observacoes", length = 500)
     private String observacoes;
 
-    @Column(name="data_entrega")
+    // @Column(name = "nome_arquivo")
+    // private String nomeArquivo;
+
+    // @Column(name = "caminho_arquivo")
+    // private String caminhoArquivo;
+
+    // @Column(name = "tipo_arquivo")
+    // private String tipoArquivo;
+
+    // @Column(name = "tamanho_arquivo")
+    // private Long tamanhoArquivo;
+
+    @Column(name = "data_entrega")
     private LocalDateTime dataEntrega;
 
     // Relacionamento com Equipamentos
+    @com.fasterxml.jackson.annotation.JsonManagedReference
     @OneToMany(mappedBy = "notaFiscal", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Equipamento> equipamentos;
 
-    @Column(name="created_at", nullable=false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name="update_at")
+    @Column(name = "update_at")
     private LocalDateTime updateAt;
 
     // --- Métodos úteis ---
 
-     public String getNumero() {
+    public String getNumero() {
         return this.numero;
     }
+
     /**
-     * Recalcula o valor total somando os valores de todos os equipamentos vinculados.
+     * Recalcula o valor total somando os valores de todos os equipamentos
+     * vinculados.
      */
     public void calcularValorTotal() {
         if (equipamentos != null && !equipamentos.isEmpty()) {

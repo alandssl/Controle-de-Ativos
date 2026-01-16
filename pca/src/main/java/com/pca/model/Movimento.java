@@ -49,11 +49,11 @@ public class Movimento {
     @JoinColumn(name = "id_ativo")
     private Equipamento equipamento;
 
-    @Column(name="cod_movimento")
+    @Column(name = "cod_movimento")
     private String codMovimento;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "anexo", nullable = false)
+    @Column(name = "status_anexo")
     private AnexoStatus anexo;
 
     @ManyToOne
@@ -62,6 +62,18 @@ public class Movimento {
 
     @Column(name = "setor", length = 50)
     private String setor;
+
+     @Column(name = "nome_arquivo")
+    private String nomeArquivo;
+
+    @Column(name = "caminho_arquivo")
+    private String caminhoArquivo;
+
+    @Column(name = "tipo_arquivo")
+    private String tipoArquivo;
+
+    @Column(name = "tamanho_arquivo")
+    private Long tamanhoArquivo;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -175,5 +187,44 @@ public class Movimento {
         this.codMovimento = codMovimento;
     }
 
+    public AnexoStatus getAnexo() {
+        return anexo;
+    }
+
+    public void setAnexo(AnexoStatus anexo) {
+        this.anexo = anexo;
+    }
+
+    public String getNomeArquivo() {
+        return nomeArquivo;
+    }
+
+    public void setNomeArquivo(String nomeArquivo) {
+        this.nomeArquivo = nomeArquivo;
+    }
+
+    public String getCaminhoArquivo() {
+        return caminhoArquivo;
+    }
+
+    public void setCaminhoArquivo(String caminhoArquivo) {
+        this.caminhoArquivo = caminhoArquivo;
+    }
+
+    public String getTipoArquivo() {
+        return tipoArquivo;
+    }
+
+    public void setTipoArquivo(String tipoArquivo) {
+        this.tipoArquivo = tipoArquivo;
+    }
+
+    public Long getTamanhoArquivo() {
+        return tamanhoArquivo;
+    }
+
+    public void setTamanhoArquivo(Long tamanhoArquivo) {
+        this.tamanhoArquivo = tamanhoArquivo;
+    }
 
 }

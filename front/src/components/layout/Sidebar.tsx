@@ -5,20 +5,41 @@ import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Laptop, Users, FileText, ArrowLeftRight, Trash2 } from 'lucide-react';
 import { usePermissions } from '@/providers/permissions-provider';
 
-const menuItems = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard, key: 'dashboard' },
-    { name: 'Ativos', href: '/assets', icon: Laptop, key: 'assets' },
-    { name: 'Movimentações', href: '/movements', icon: ArrowLeftRight, key: 'movements' },
-    { name: 'Funcionários', href: '/employees', icon: Users, key: 'employees' },
-    { name: 'Sucata', href: '/scrap', icon: Trash2, key: 'scrap' },
-    { name: 'Notas Fiscais', href: '/invoices', icon: FileText, key: 'invoices' },
+const menuGroups = [
+    {
+        title: 'Principal',
+        items: [
+            { name: 'Dashboard', href: '/', icon: LayoutDashboard, key: 'dashboard' },
+            { name: 'Ativos', href: '/assets', icon: Laptop, key: 'assets' },
+            { name: 'Movimentações', href: '/movements', icon: ArrowLeftRight, key: 'movements' },
+            { name: 'Funcionários', href: '/employees', icon: Users, key: 'employees' },
+            { name: 'Notas Fiscais', href: '/invoices', icon: FileText, key: 'invoices' },
+            { name: 'Sucata', href: '/scrap', icon: Trash2, key: 'scrap' },
+        ]
+    },
+    {
+        title: 'Gerenciamento',
+        items: [
+            { name: 'Relatórios', href: '/reports', icon: FileText, key: 'reports', alwaysVisible: true }, // Assuming no permission key for now or default open
+        ]
+    },
+    {
+        title: 'Usuário',
+        items: [
+            { name: 'Configurações', href: '/settings', icon: Users, key: 'settings', alwaysVisible: true }, // Using Users icon as placeholder or Settings icon if available
+        ]
+    }
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
     const { permissions } = usePermissions();
 
-    const visibleItems = menuItems.filter(item => permissions[item.key as keyof typeof permissions]);
+    // Helper to check visibility
+    const isVisible = (item: any) => {
+        if (item.alwaysVisible) return true;
+        return permissions[item.key as keyof typeof permissions];
+    };
 
     return (
         <aside className="w-64 bg-card border-r flex flex-col h-screen sticky top-0 overflow-y-auto z-30 shadow-sm">
@@ -31,36 +52,40 @@ export function Sidebar() {
             </div>
 
             <div className="flex-1 py-6 px-3 space-y-6">
-                <div>
-                    <p className="px-4 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">Principal</p>
-                    <nav className="space-y-1">
-                        {visibleItems.map((item) => {
-                            const Icon = item.icon;
-                            const isActive = pathname === item.href;
+                <div className="flex-1 py-6 px-3 space-y-6">
+                    {menuGroups.map((group, groupIndex) => (
+                        <div key={groupIndex}>
+                            <p className="px-4 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">{group.title}</p>
+                            <nav className="space-y-1">
+                                {group.items.filter(isVisible).map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = pathname === item.href;
 
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={`
-                                        flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 no-underline hover:no-underline group relative
-                                        ${isActive
-                                            ? 'bg-primary/10 text-primary'
-                                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                                        }
-                                    `}
-                                >
-                                    {isActive && (
-                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
-                                    )}
-                                    <span className={`flex items-center justify-center w-6 shrink-0 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}>
-                                        <Icon size={18} />
-                                    </span>
-                                    {item.name}
-                                </Link>
-                            );
-                        })}
-                    </nav>
+                                    return (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            className={`
+                                            flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 no-underline hover:no-underline group relative
+                                            ${isActive
+                                                    ? 'bg-primary/10 text-primary'
+                                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                                }
+                                        `}
+                                        >
+                                            {isActive && (
+                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                                            )}
+                                            <span className={`flex items-center justify-center w-6 shrink-0 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}>
+                                                <Icon size={18} />
+                                            </span>
+                                            {item.name}
+                                        </Link>
+                                    );
+                                })}
+                            </nav>
+                        </div>
+                    ))}
                 </div>
 
 

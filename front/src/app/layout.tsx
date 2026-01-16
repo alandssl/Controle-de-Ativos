@@ -7,10 +7,12 @@ import { NotificationProvider } from '@/providers/notification-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'Controle de Ativos - PCA',
+    title: 'Controle de Ativos - TECAL',
     description: 'Sistema de controle de ativos de TI',
     icons: {
         icon: '/logo_tecal.png',
+        shortcut: '/logo_tecal.png',
+        apple: '/logo_tecal.png',
     },
 };
 

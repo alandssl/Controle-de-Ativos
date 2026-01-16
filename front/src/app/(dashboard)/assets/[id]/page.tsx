@@ -62,7 +62,7 @@ export default function AssetDetailsPage({ params }: PageProps) {
             }
         };
 
-        if (assetId) {
+        if (assetId && !isNaN(assetId)) {
             fetchData();
         }
     }, [assetId]);

@@ -158,7 +158,7 @@ export default function ScrapPage() {
                     <h1 className="text-2xl font-bold tracking-tight">Sucata & Peças</h1>
                     <p className="text-sm text-muted-foreground">Gerencie peças recuperadas de equipamentos descartados.</p>
                 </div>
-                <Link href="/scrap/new">
+                <Link href="/scrap/new" className='no-underline'>
                     <Button>
                         <Recycle className="mr-2 h-4 w-4" />
                         Registrar Descartes
