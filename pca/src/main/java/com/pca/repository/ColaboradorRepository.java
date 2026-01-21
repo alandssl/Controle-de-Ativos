@@ -11,8 +11,10 @@ import com.pca.model.Colaborador;
 public interface ColaboradorRepository extends JpaRepository<Colaborador, Long> {
     // Exemplo: buscar colaborador pela chapa
     Colaborador findByChapa(String chapa);
+
     // Buscar colaborador pelo nome ignorando letras maiusculas e minusculas
     List<Colaborador> findByNomeContainingIgnoreCase(String nome);
+
     // Busca colaborador pelo codigo de pessoa dele
     List<Colaborador> findByCodPessoa(Long codigo);
 }

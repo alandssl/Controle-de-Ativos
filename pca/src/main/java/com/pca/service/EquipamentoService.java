@@ -7,6 +7,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.pca.model.Equipamento;
 import com.pca.repository.EquipamentoRepository;
+import com.pca.dto.NotaFiscalRequest;
+
+import com.pca.model.Colaborador;
+import com.pca.model.Movimento;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,7 +24,7 @@ public class EquipamentoService {
 
     @Transactional
     public Equipamento cadastrar(Equipamento equipamento, Long responsavelId,
-            com.pca.dto.NotaFiscalRequest novaNotaFiscal) {
+            NotaFiscalRequest novaNotaFiscal) {
         if (equipamento.getEstado() == null) {
             throw new IllegalArgumentException("Estado do equipamento é obrigatório");
         }
@@ -52,10 +56,10 @@ public class EquipamentoService {
         Equipamento salvo = repository.save(equipamento);
 
         if (responsavelId != null) {
-            com.pca.model.Colaborador colaborador = colaboradorRepository.findById(responsavelId)
+            Colaborador colaborador = colaboradorRepository.findById(responsavelId)
                     .orElseThrow(() -> new IllegalArgumentException("Colaborador não encontrado"));
 
-            com.pca.model.Movimento movimento = new com.pca.model.Movimento();
+            Movimento movimento = new com.pca.model.Movimento();
             movimento.setTipoMovimento("SAIDA");
             movimento.setObservacao("Entrega inicial ao cadastrar");
             movimento.setDataMovimento(java.time.LocalDateTime.now());

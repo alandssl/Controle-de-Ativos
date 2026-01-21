@@ -203,9 +203,8 @@ export function Header() {
                     )}
                 </div>
 
-                <ModeToggle />
-
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    <ModeToggle />
                     <Link href="/login">
                         <Button variant="ghost" size="icon" className="rounded-full" title="Sair">
                             <LogOut size={20} className="text-muted-foreground hover:text-primary transition-colors" />

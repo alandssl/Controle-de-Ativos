@@ -51,7 +51,7 @@ export default function ReportsPage() {
 
     // 1. Ativos por Tipo (Pie Chart)
     const ativosPorTipo = ativos.reduce((acc, curr) => {
-        const tipo = curr.tipo_equipamento || 'Outros';
+        const tipo = curr.tipoEquipamento?.tipo || 'Outros';
         acc[tipo] = (acc[tipo] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
@@ -84,7 +84,7 @@ export default function ReportsPage() {
 
     // 3. Investimento por Fornecedor (Top 5)
     const investimentoPorFornecedor = notasFiscais.reduce((acc, curr) => {
-        const fornecedor = curr.fornecedor || 'Desconhecido';
+        const fornecedor = curr.fornecedorNome || 'Desconhecido';
         acc[fornecedor] = (acc[fornecedor] || 0) + (curr.valorTotal || 0);
         return acc;
     }, {} as Record<string, number>);
@@ -152,7 +152,7 @@ export default function ReportsPage() {
                                             ))}
                                         </Pie>
                                         <RechartsTooltip
-                                            formatter={(value: number) => [value, 'Qtd']}
+                                            formatter={(value: number | undefined) => [value ?? 0, 'Qtd']}
                                             contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                         />
                                         <Legend verticalAlign="bottom" height={36} iconType="circle" />
@@ -210,7 +210,7 @@ export default function ReportsPage() {
                                         <XAxis type="number" hide />
                                         <YAxis dataKey="name" type="category" width={80} fontSize={11} tickLine={false} axisLine={false} />
                                         <RechartsTooltip
-                                            formatter={(value: number) => [`R$ ${value.toLocaleString()}`, 'Total']}
+                                            formatter={(value: number | undefined) => [`R$ ${value?.toLocaleString() ?? '0'}`, 'Total']}
                                             cursor={{ fill: 'rgba(0,0,0,0.05)' }}
                                             contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                         />
