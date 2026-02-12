@@ -121,6 +121,7 @@ export interface NotaFiscal {
   dataEntrada?: string;
   dataEntrega?: string;
   valorTotal: number;
+  garantia?: boolean;
 
   // File fields
   nomeArquivo?: string;

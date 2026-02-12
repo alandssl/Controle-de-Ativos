@@ -16,8 +16,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.pca.dto.EquipamentoRequest;
 import com.pca.model.Equipamento;
-import com.pca.repository.notaFiscalRepository;
 import com.pca.repository.StatusRepository;
+import com.pca.repository.notaFiscalRepository;
 import com.pca.repository.tipoEquipamentoRepository;
 import com.pca.repository.tipoEstadoRepository;
 import com.pca.service.EquipamentoService;
@@ -74,18 +74,24 @@ public class EquipamentoController {
                         throw new IllegalArgumentException("Estado e Tipo de Equipamento são obrigatórios.");
                 }
 
+                // Base fields handled by SuperBuilder
+                var tipoEstado = tipoEstadoRepository.findById(estado)
+                                .orElseThrow(() -> new IllegalArgumentException("Estado inválido: " + estado));
+                var tipoEquipamentoObj = tipoEquipamentoRepository.findById(tipoEquip)
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                "Tipo equipamento inválido: " + tipoEquip));
+                var notaFiscal = request.notaFiscal() != null
+                                ? notaFiscalRepository.findById(request.notaFiscal()).orElse(null)
+                                : null;
+                var status = request.status() != null ? statusRepository.findById(request.status()).orElse(null) : null;
+                var dataAquisicao = request.dataAquisicao() != null ? request.dataAquisicao().atStartOfDay() : null;
+
+                // Default for IT Equipment
                 return Equipamento.builder()
-                                .estado(tipoEstadoRepository.findById(estado)
-                                                .orElseThrow(() -> new IllegalArgumentException(
-                                                                "Estado inválido: " + estado)))
-                                .tipoEquipamento(tipoEquipamentoRepository.findById(tipoEquip)
-                                                .orElseThrow(() -> new IllegalArgumentException(
-                                                                "Tipo equipamento inválido: " + tipoEquip)))
-                                .notaFiscal(request.notaFiscal() != null ? notaFiscalRepository
-                                                .findById(request.notaFiscal())
-                                                .orElse(null) : null)
-                                .status(request.status() != null ? statusRepository.findById(request.status())
-                                                .orElse(null) : null)
+                                .estado(tipoEstado)
+                                .tipoEquipamento(tipoEquipamentoObj)
+                                .notaFiscal(notaFiscal)
+                                .status(status)
                                 .fabricante(request.fabricante())
                                 .etiqueta(request.etiqueta())
                                 .tec(request.tec())
@@ -98,8 +104,7 @@ public class EquipamentoController {
                                 .quantidadeArmazenamento(request.quantidadeArmazenamento())
                                 .descricao(request.descricao())
                                 .valor(request.valor())
-                                .data_aquisicao(request.dataAquisicao() != null ? request.dataAquisicao().atStartOfDay()
-                                                : null)
+                                .data_aquisicao(dataAquisicao)
                                 .imeiCelular(request.imeiCelular())
                                 .build();
         }

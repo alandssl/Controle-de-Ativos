@@ -1,7 +1,5 @@
 package com.pca.controller;
 
-
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -68,6 +66,8 @@ public class NotaFiscalController {
                 .fornecedorEndereco(request.fornecedorEndereco())
                 .chaveAcesso(request.chaveAcesso())
                 .observacoes(request.observacoes())
+                .garantia(request.garantia())
+                .dataValidadeGarantia(request.dataValidadeGarantia())
                 .createdAt(java.time.LocalDateTime.now())
                 .build();
 
@@ -89,32 +89,34 @@ public class NotaFiscalController {
 
     // Endpoint para gerar PDF de uma nota por ID
     // @GetMapping("/arquivo/{id}")
-    // public ResponseEntity<byte[]> gerarPdf(@PathVariable Long id) throws Exception {
-    //     NotaFiscal nota = notaFiscalService.findById(id);
-    //     if (nota == null) {
-    //         return ResponseEntity.notFound().build();
-    //     }
+    // public ResponseEntity<byte[]> gerarPdf(@PathVariable Long id) throws
+    // Exception {
+    // NotaFiscal nota = notaFiscalService.findById(id);
+    // if (nota == null) {
+    // return ResponseEntity.notFound().build();
+    // }
 
-    //     byte[] pdfBytes = NotaFiscalReportUtil.gerarRelatorioPDF(nota);
+    // byte[] pdfBytes = NotaFiscalReportUtil.gerarRelatorioPDF(nota);
 
-    //     return ResponseEntity.ok()
-    //             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=nota_" + nota.getNumero() + ".pdf")
-    //             .contentType(MediaType.APPLICATION_PDF).contentLength(nota.getTamanhoArquivo())
-    //             .body(pdfBytes);
+    // return ResponseEntity.ok()
+    // .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=nota_" +
+    // nota.getNumero() + ".pdf")
+    // .contentType(MediaType.APPLICATION_PDF).contentLength(nota.getTamanhoArquivo())
+    // .body(pdfBytes);
     // }
 
     @GetMapping("/arquivo/{id}")
     public ResponseEntity<byte[]> gerarPdf(@PathVariable Long id) throws Exception {
 
-    NotaFiscal nota = repository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Nota fiscal não encontrada"));
+        NotaFiscal nota = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Nota fiscal não encontrada"));
 
-    byte[] pdfBytes = NotaFiscalReportUtil.gerarRelatorioPDF(nota);
+        byte[] pdfBytes = NotaFiscalReportUtil.gerarRelatorioPDF(nota);
 
-    return ResponseEntity.ok()
-        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=nota-fiscal-" + nota.getNumero() + ".pdf")
-        .contentType(MediaType.APPLICATION_PDF)
-        .body(pdfBytes);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=nota-fiscal-" + nota.getNumero() + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
     }
 
 }

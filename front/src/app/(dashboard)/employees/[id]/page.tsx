@@ -40,17 +40,17 @@ export default function EmployeeDetailsPage({ params }: PageProps) {
     }
 
     // Get all movements for this employee
-    const movements = mockMovimentacoes.filter(m => m.idColaborador === empId);
+    const movements = mockMovimentacoes.filter(m => m.idColaborador?.id === empId);
 
     // Find current assets: For each asset, check if the LAST movement for it was to this employee
     const currentAssets = mockAtivos.filter(asset => {
         const assetMovements = mockMovimentacoes
-            .filter(m => m.idAtivo === asset.id)
+            .filter(m => m.idEquipamento?.id === asset.id)
             .sort((a, b) => new Date(b.dataMovimento).getTime() - new Date(a.dataMovimento).getTime());
 
         return assetMovements.length > 0 &&
-            assetMovements[0].idColaborador === empId &&
-            assetMovements[0].tipoDesc === 'Saida';
+            assetMovements[0].idColaborador?.id === empId &&
+            assetMovements[0].tipoMovimento === 'Saida';
     });
 
     const isContractUpdated = () => {
@@ -230,16 +230,16 @@ export default function EmployeeDetailsPage({ params }: PageProps) {
                                     {movements
                                         .sort((a, b) => new Date(b.dataMovimento).getTime() - new Date(a.dataMovimento).getTime())
                                         .map(mov => {
-                                            const asset = mockAtivos.find(a => a.id === mov.idAtivo);
+                                            const asset = mockAtivos.find(a => a.id === mov.idEquipamento?.id);
                                             return (
                                                 <div key={mov.id} className="flex items-start gap-4 p-3 rounded-lg border bg-muted/10">
-                                                    <div className={`mt-1 p-2 rounded-full ${mov.tipoDesc === 'Saida' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'}`}>
-                                                        {mov.tipoDesc === 'Saida' ? <Laptop className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
+                                                    <div className={`mt-1 p-2 rounded-full ${mov.tipoMovimento === 'Saida' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'}`}>
+                                                        {mov.tipoMovimento === 'Saida' ? <Laptop className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
                                                     </div>
                                                     <div className="flex-1">
                                                         <div className="flex justify-between items-start">
                                                             <h4 className="text-sm font-bold">
-                                                                {mov.tipoDesc === 'Saida' ? 'Entrega de Equipamento' : 'Devolução de Equipamento'}
+                                                                {mov.tipoMovimento === 'Saida' ? 'Entrega de Equipamento' : 'Devolução de Equipamento'}
                                                             </h4>
                                                             <span className="text-[10px] text-muted-foreground font-mono">#{mov.id}</span>
                                                         </div>
@@ -247,7 +247,7 @@ export default function EmployeeDetailsPage({ params }: PageProps) {
                                                             {asset?.patrimonio} - {asset?.modelo}
                                                         </p>
                                                         <p className="text-xs italic text-muted-foreground/80 leading-snug">
-                                                            "{mov.obs}"
+                                                            "{mov.observacao}"
                                                         </p>
                                                         <div className="flex items-center gap-2 mt-2 pt-2 border-t border-muted">
                                                             <Calendar className="h-3 w-3 text-muted-foreground" />

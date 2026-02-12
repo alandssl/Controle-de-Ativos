@@ -57,6 +57,8 @@ export default function NewAssetPage() {
 
         // Nova Nota Fiscal
         criarNovaNota: false,
+        new_nf_garantia: false,
+        new_nf_data_garantia: '',
         new_nf_numero: '',
         new_nf_fornecedor: '',
         new_nf_cnpj: '',
@@ -206,6 +208,8 @@ export default function NewAssetPage() {
                     dataEmissao: formData.new_nf_data || null,
                     valorTotal: formData.new_nf_valor ? parseFloat(formData.new_nf_valor) : 0,
                     chaveAcesso: formData.new_nf_chave || null,
+                    garantia: formData.new_nf_garantia || false,
+                    dataValidadeGarantia: (formData.new_nf_garantia && formData.new_nf_data_garantia) ? formData.new_nf_data_garantia : null
                 } : null
             };
 
@@ -264,194 +268,288 @@ export default function NewAssetPage() {
 
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Identificação */}
+                    {/* Identificação - Dinâmica por Tipo */}
                     <Card>
                         <CardHeader>
                             <CardTitle>Identificação</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="tipoEquipamento">Tipo</Label>
-                                    <Select
-                                        value={formData.tipoEquipamento}
-                                        onChange={(e) => handleChange('tipoEquipamento', e.target.value)}
-                                        autoFocus
-                                    >
-                                        <option value="">Selecione</option>
+                            <div className="space-y-2">
+                                <Label htmlFor="tipoEquipamento">Tipo de Equipamento <span className="text-red-500">*</span></Label>
+                                <Select
+                                    value={formData.tipoEquipamento}
+                                    onChange={(e) => handleChange('tipoEquipamento', e.target.value)}
+                                    autoFocus
+                                >
+                                    <option value="">Selecione o tipo...</option>
+                                    <optgroup label="Informática">
                                         <option value="DESKTOP">Desktop</option>
                                         <option value="NOTEBOOK">Notebook</option>
                                         <option value="IMPRESSORA">Impressora</option>
+                                    </optgroup>
+                                    <optgroup label="Mobilidade">
                                         <option value="CELULAR">Celular</option>
                                         <option value="TABLET">Tablet</option>
-                                        <option value="CHIP">Chip</option>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="patrimonio">
-                                        {formData.tipoEquipamento === 'CHIP' ? 'ICCID (Série do Chip)' : 'Patrimônio'}
-                                        {isFieldRequired('patrimonio') && <span className="text-red-500">*</span>}
-                                    </Label>
-                                    <Input
-                                        id="patrimonio"
-                                        placeholder={formData.tipoEquipamento === 'CHIP' ? "8955..." : "NTB-2024-001"}
-                                        required={isFieldRequired('patrimonio')}
-                                        value={formData.patrimonio}
-                                        onChange={e => handleChange('patrimonio', e.target.value)}
-                                    />
-                                </div>
+                                        <option value="CHIP">Chip (Sim Card)</option>
+                                    </optgroup>
+                                </Select>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="etiqueta">
-                                        {formData.tipoEquipamento === 'CHIP' ? 'Código Verificação (2 Dígitos)' : 'Etiqueta (SN)'}
-                                        {isFieldRequired('etiqueta') && <span className="text-red-500">*</span>}
-                                    </Label>
-                                    <Input
-                                        id="etiqueta"
-                                        placeholder={formData.tipoEquipamento === 'CHIP' ? "Ex: 42" : "Serial Number"}
-                                        required={isFieldRequired('etiqueta')}
-                                        maxLength={formData.tipoEquipamento === 'CHIP' ? 2 : undefined}
-                                        value={formData.etiqueta}
-                                        onChange={e => handleChange('etiqueta', e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="tec">
-                                        {formData.tipoEquipamento === 'CHIP' ? 'Número da Linha' : 'Nome Técnico (Tec)'}
-                                        {formData.tipoEquipamento === 'CHIP' && isFieldRequired('numero_linha') && <span className="text-red-500">*</span>}
-                                    </Label>
-                                    <Input
-                                        id="tec"
-                                        placeholder={formData.tipoEquipamento === 'CHIP' ? "(11) 99999-9999" : "Ex: PC-TI-01"}
-                                        value={formData.tipoEquipamento === 'CHIP' ? formData.numero_linha : formData.tec}
-                                        onChange={e => handleChange(formData.tipoEquipamento === 'CHIP' ? 'numero_linha' : 'tec', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="fabricante">
-                                        {formData.tipoEquipamento === 'CHIP' ? 'Operadora' : 'Fabricante'}
-                                        {isFieldRequired('fabricante') && <span className="text-red-500">*</span>}
-                                    </Label>
-                                    <Input
-                                        id="fabricante"
-                                        placeholder={formData.tipoEquipamento === 'CHIP' ? "Vivo, Tim, Claro" : "Ex: Dell, HP"}
-                                        required={isFieldRequired('fabricante')}
-                                        value={formData.fabricante}
-                                        onChange={e => handleChange('fabricante', e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="modelo">
-                                        {formData.tipoEquipamento === 'CHIP' ? 'Plano / Tipo' : 'Modelo'}
-                                        {isFieldRequired('modelo') && <span className="text-red-500">*</span>}
-                                    </Label>
-                                    <Input
-                                        id="modelo"
-                                        placeholder={formData.tipoEquipamento === 'CHIP' ? "Smart Empresas 5GB" : "Ex: Latitude 5420"}
-                                        required={isFieldRequired('modelo')}
-                                        value={formData.modelo}
-                                        onChange={e => handleChange('modelo', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            {(formData.tipoEquipamento === 'CELULAR' || formData.tipoEquipamento === 'TABLET') && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="imei">IMEI {isFieldRequired('imei') && <span className="text-red-500">*</span>}</Label>
-                                    <Input
-                                        id="imei"
-                                        placeholder="IMEI do dispositivo"
-                                        required={isFieldRequired('imei')}
-                                        value={formData.imei}
-                                        onChange={e => handleChange('imei', e.target.value)}
-                                    />
+                            {!formData.tipoEquipamento && (
+                                <div className="p-4 bg-muted/30 rounded-lg text-center text-sm text-muted-foreground border border-dashed">
+                                    Selecione um tipo de equipamento acima para habilitar o formulário.
                                 </div>
                             )}
 
-                            <div className="space-y-2">
-                                <Label htmlFor="descricao">Descrição</Label>
-                                <Input
-                                    id="descricao"
-                                    placeholder="Descrição breve"
-                                    value={formData.descricao}
-                                    onChange={e => handleChange('descricao', e.target.value)}
-                                />
-                            </div>
+                            {/* Layout para CHIP */}
+                            {formData.tipoEquipamento === 'CHIP' && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="patrimonio">ICCID (Série do Chip) <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="patrimonio"
+                                                placeholder="8955..."
+                                                required
+                                                value={formData.patrimonio}
+                                                onChange={e => handleChange('patrimonio', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="numero_linha">Número da Linha <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="numero_linha"
+                                                placeholder="(11) 99999-9999"
+                                                required
+                                                value={formData.numero_linha}
+                                                onChange={e => handleChange('numero_linha', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="fabricante">Operadora <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="fabricante"
+                                                placeholder="Vivo, Tim, Claro..."
+                                                required
+                                                value={formData.fabricante}
+                                                onChange={e => handleChange('fabricante', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="modelo">Plano de Dados <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="modelo"
+                                                placeholder="Ex: Smart Empresas 5GB"
+                                                required
+                                                value={formData.modelo}
+                                                onChange={e => handleChange('modelo', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="etiqueta">Código Verificação / PIN (2 Dígitos)</Label>
+                                        <Input
+                                            id="etiqueta"
+                                            placeholder="Ex: 42"
+                                            maxLength={2}
+                                            value={formData.etiqueta}
+                                            onChange={e => handleChange('etiqueta', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Layout para CELULAR / TABLET */}
+                            {['CELULAR', 'TABLET'].includes(formData.tipoEquipamento) && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="patrimonio">Patrimônio / ID <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="patrimonio"
+                                                placeholder="Ex: CEL-001"
+                                                required
+                                                value={formData.patrimonio}
+                                                onChange={e => handleChange('patrimonio', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="imei">IMEI <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="imei"
+                                                placeholder="35..."
+                                                required
+                                                value={formData.imei}
+                                                onChange={e => handleChange('imei', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="fabricante">Marca <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="fabricante"
+                                                placeholder="Apple, Samsung..."
+                                                required
+                                                value={formData.fabricante}
+                                                onChange={e => handleChange('fabricante', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="modelo">Modelo <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="modelo"
+                                                placeholder="iPhone 13, Galaxy S22..."
+                                                required
+                                                value={formData.modelo}
+                                                onChange={e => handleChange('modelo', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="etiqueta">Número Serial (Opcional)</Label>
+                                        <Input
+                                            id="etiqueta"
+                                            placeholder="Serial Number"
+                                            value={formData.etiqueta}
+                                            onChange={e => handleChange('etiqueta', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Layout para COMPUTADORES / IMPRESSORAS */}
+                            {['DESKTOP', 'NOTEBOOK', 'IMPRESSORA'].includes(formData.tipoEquipamento) && (
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="patrimonio">Patrimônio <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="patrimonio"
+                                                placeholder="Ex: NTB-2024-001"
+                                                required
+                                                value={formData.patrimonio}
+                                                onChange={e => handleChange('patrimonio', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="etiqueta">Service Tag / Serial <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="etiqueta"
+                                                placeholder="Serial Number"
+                                                required
+                                                value={formData.etiqueta}
+                                                onChange={e => handleChange('etiqueta', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="tec">Hostname / Nome <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="tec"
+                                                placeholder="Ex: PC-TI-01"
+                                                value={formData.tec}
+                                                onChange={e => handleChange('tec', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="fabricante">Fabricante <span className="text-red-500">*</span></Label>
+                                            <Input
+                                                id="fabricante"
+                                                placeholder="Dell, HP, Lenovo"
+                                                required
+                                                value={formData.fabricante}
+                                                onChange={e => handleChange('fabricante', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="modelo">Modelo <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="modelo"
+                                            placeholder="Ex: Latitude 5420"
+                                            required
+                                            value={formData.modelo}
+                                            onChange={e => handleChange('modelo', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
-                    {/* Hardware */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Hardware</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="gpu">GPU (Placa de Vídeo)</Label>
-                                <Input
-                                    id="gpu"
-                                    placeholder="Ex: NVIDIA RTX 3060"
-                                    value={formData.gpu}
-                                    onChange={e => handleChange('gpu', e.target.value)}
-                                />
-                            </div>
+                    {/* Hardware - Apenas para PCs */}
+                    {['DESKTOP', 'NOTEBOOK'].includes(formData.tipoEquipamento) && (
+                        <Card className="animate-in fade-in slide-in-from-right-4 duration-500">
+                            <CardHeader>
+                                <CardTitle>Hardware</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="gpu">GPU (Placa de Vídeo)</Label>
+                                    <Input
+                                        id="gpu"
+                                        placeholder="Ex: NVIDIA RTX 3060"
+                                        value={formData.gpu}
+                                        onChange={e => handleChange('gpu', e.target.value)}
+                                    />
+                                </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="tipoRam">Tipo RAM {isFieldRequired('tipoRam') && <span className="text-red-500">*</span>}</Label>
-                                    <Input
-                                        id="tipoRam"
-                                        placeholder="Ex: DDR4"
-                                        required={isFieldRequired('tipoRam')}
-                                        value={formData.tipoRam}
-                                        onChange={e => handleChange('tipoRam', e.target.value)}
-                                    />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="tipoRam">Tipo RAM <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="tipoRam"
+                                            placeholder="Ex: DDR4"
+                                            required={['DESKTOP', 'NOTEBOOK'].includes(formData.tipoEquipamento)}
+                                            value={formData.tipoRam}
+                                            onChange={e => handleChange('tipoRam', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="quantidadeRam">Qtd. RAM (GB) <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="quantidadeRam"
+                                            type="number"
+                                            placeholder="16"
+                                            required={['DESKTOP', 'NOTEBOOK'].includes(formData.tipoEquipamento)}
+                                            value={formData.quantidadeRam}
+                                            onChange={e => handleChange('quantidadeRam', e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="quantidadeRam">Qtd. RAM (GB) {isFieldRequired('quantidadeRam') && <span className="text-red-500">*</span>}</Label>
-                                    <Input
-                                        id="quantidadeRam"
-                                        type="number"
-                                        placeholder="16"
-                                        required={isFieldRequired('quantidadeRam')}
-                                        value={formData.quantidadeRam}
-                                        onChange={e => handleChange('quantidadeRam', e.target.value)}
-                                    />
-                                </div>
-                            </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="tipoArmazenamento">Tipo Armaz. {isFieldRequired('tipoArmazenamento') && <span className="text-red-500">*</span>}</Label>
-                                    <Input
-                                        id="tipoArmazenamento"
-                                        placeholder="Ex: NVMe SSD"
-                                        required={isFieldRequired('tipoArmazenamento')}
-                                        value={formData.tipoArmazenamento}
-                                        onChange={e => handleChange('tipoArmazenamento', e.target.value)}
-                                    />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="tipoArmazenamento">Tipo Armaz. <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="tipoArmazenamento"
+                                            placeholder="Ex: NVMe SSD"
+                                            required={['DESKTOP', 'NOTEBOOK'].includes(formData.tipoEquipamento)}
+                                            value={formData.tipoArmazenamento}
+                                            onChange={e => handleChange('tipoArmazenamento', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="quantidadeArmazenamento">Qtd. Armaz. (GB) <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            id="quantidadeArmazenamento"
+                                            type="number"
+                                            placeholder="512"
+                                            required={['DESKTOP', 'NOTEBOOK'].includes(formData.tipoEquipamento)}
+                                            value={formData.quantidadeArmazenamento}
+                                            onChange={e => handleChange('quantidadeArmazenamento', e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="quantidadeArmazenamento">Qtd. Armaz. (GB) {isFieldRequired('quantidadeArmazenamento') && <span className="text-red-500">*</span>}</Label>
-                                    <Input
-                                        id="quantidadeArmazenamento"
-                                        type="number"
-                                        placeholder="512"
-                                        required={isFieldRequired('quantidadeArmazenamento')}
-                                        value={formData.quantidadeArmazenamento}
-                                        onChange={e => handleChange('quantidadeArmazenamento', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    )}
 
-                    {/* Nota Fiscal */}
+                    {/* Nota Fiscal - Sempre exibido */}
                     <Card className="lg:col-span-2">
                         <CardHeader>
                             <CardTitle>Nota Fiscal</CardTitle>
@@ -494,13 +592,39 @@ export default function NewAssetPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div className="space-y-2">
                                             <Label htmlFor="new_nf_numero">Número da NF <span className="text-red-500">*</span></Label>
-                                            <Input
-                                                id="new_nf_numero"
-                                                placeholder="Ex: 123456"
-                                                value={formData.new_nf_numero}
-                                                onChange={e => handleChange('new_nf_numero', e.target.value)}
-                                                required={formData.criarNovaNota}
-                                            />
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    id="new_nf_numero"
+                                                    placeholder="Ex: 123456"
+                                                    value={formData.new_nf_numero}
+                                                    onChange={e => handleChange('new_nf_numero', e.target.value)}
+                                                    required={formData.criarNovaNota}
+                                                />
+                                                <div className="flex items-center gap-2 border px-3 rounded-md min-w-fit bg-white" title="Possui Garantia?">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="new_nf_garantia"
+                                                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                                                        checked={Boolean(formData.new_nf_garantia)}
+                                                        onChange={(e) => handleChange('new_nf_garantia', e.target.checked)}
+                                                    />
+                                                    <Label htmlFor="new_nf_garantia" className="text-xs font-medium cursor-pointer">
+                                                        Garantia
+                                                    </Label>
+                                                </div>
+                                            </div>
+                                            {formData.new_nf_garantia && (
+                                                <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                    <Label htmlFor="new_nf_data_garantia" className="text-xs">Data Validade Garantia</Label>
+                                                    <Input
+                                                        type="date"
+                                                        id="new_nf_data_garantia"
+                                                        className="mt-1"
+                                                        value={formData.new_nf_data_garantia}
+                                                        onChange={e => handleChange('new_nf_data_garantia', e.target.value)}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="new_nf_fornecedor">Fornecedor <span className="text-red-500">*</span></Label>
@@ -589,10 +713,9 @@ export default function NewAssetPage() {
                                         onChange={e => handleChange('valor', e.target.value)}
                                     />
                                 </div>
-                                {/* Removed NF inputs from here */}
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="estado">Estado Conservação {isFieldRequired('estado') && <span className="text-red-500">*</span>}</Label>
+                                    <Label htmlFor="estado">Estado Conservação <span className="text-red-500">*</span></Label>
                                     <Select
                                         value={formData.estado}
                                         onChange={(e) => handleChange('estado', e.target.value)}
@@ -607,7 +730,7 @@ export default function NewAssetPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="status">Status Operacional {isFieldRequired('status') && <span className="text-red-500">*</span>}</Label>
+                                    <Label htmlFor="status">Status Operacional <span className="text-red-500">*</span></Label>
                                     <Select
                                         value={formData.status}
                                         onChange={(e) => handleChange('status', e.target.value)}
@@ -681,7 +804,7 @@ export default function NewAssetPage() {
                         <CardContent>
                             <Textarea
                                 id="obs"
-                                placeholder="Observações..."
+                                placeholder="Detalhes adicionais, estado físico, acessórios inclusos..."
                                 className="min-h-[100px]"
                                 value={formData.descricao}
                                 onChange={e => handleChange('descricao', e.target.value)}

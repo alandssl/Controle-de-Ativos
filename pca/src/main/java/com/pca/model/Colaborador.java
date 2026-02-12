@@ -2,6 +2,8 @@ package com.pca.model;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.Immutable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@Immutable
 @Table(name = "colaborador")
 public class Colaborador {
 

@@ -19,6 +19,7 @@ export default function NewInvoicePage() {
     const [file, setFile] = useState<File | null>(null);
     const [supplierNames, setSupplierNames] = useState<string[]>([]);
     const [invoiceNumbers, setInvoiceNumbers] = useState<string[]>([]);
+    const [hasWarranty, setHasWarranty] = useState(false);
 
     const { addNotification } = useNotifications();
     const router = useRouter();
@@ -52,6 +53,8 @@ export default function NewInvoicePage() {
                 fornecedorEndereco: (formData.get('endereco_fornecedor') as string) || null,
                 chaveAcesso: (formData.get('chave_acesso') as string) || null,
                 observacoes: '',
+                garantia: hasWarranty,
+                dataValidadeGarantia: hasWarranty ? (formData.get('data_validade_garantia') as string) : null
             };
 
             // 1. Create Invoice
@@ -138,12 +141,27 @@ export default function NewInvoicePage() {
                                     <Input id="data_entrada" name="data_entrada" type="date" required />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="data_entrega">Data de Entrega</Label>
-                                    <Input id="data_entrega" name="data_entrega" type="date" />
-                                </div>
-                                <div className="space-y-2">
                                     <Label htmlFor="valor_total">Valor Total</Label>
                                     <Input id="valor_total" name="valor_total" placeholder="R$ 0,00" />
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Label htmlFor="garantia" className="cursor-pointer">Garantia?</Label>
+                                        <input
+                                            type="checkbox"
+                                            id="garantia"
+                                            name="garantia"
+                                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer border"
+                                            checked={hasWarranty}
+                                            onChange={(e) => setHasWarranty(e.target.checked)}
+                                        />
+                                    </div>
+                                    {hasWarranty && (
+                                        <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                                            <Label htmlFor="data_validade_garantia" className="text-xs">Validade Garantia</Label>
+                                            <Input id="data_validade_garantia" name="data_validade_garantia" type="date" required={hasWarranty} className="mt-1" />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

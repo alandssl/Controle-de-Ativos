@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Laptop, Users, FileText, ArrowLeftRight, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Laptop, Users, FileText, ArrowLeftRight } from 'lucide-react';
 import { usePermissions } from '@/providers/permissions-provider';
 
 const menuGroups = [
@@ -14,7 +14,7 @@ const menuGroups = [
             { name: 'Movimentações', href: '/movements', icon: ArrowLeftRight, key: 'movements' },
             { name: 'Funcionários', href: '/employees', icon: Users, key: 'employees' },
             { name: 'Notas Fiscais', href: '/invoices', icon: FileText, key: 'invoices' },
-            { name: 'Sucata', href: '/scrap', icon: Trash2, key: 'scrap' },
+
         ]
     },
     {

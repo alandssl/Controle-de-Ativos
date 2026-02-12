@@ -46,6 +46,8 @@ public class EquipamentoService {
                             ? novaNotaFiscal.chaveAcesso()
                             : null)
                     .observacoes(novaNotaFiscal.observacoes())
+                    .garantia(novaNotaFiscal.garantia())
+                    .dataValidadeGarantia(novaNotaFiscal.dataValidadeGarantia())
                     .createdAt(java.time.LocalDateTime.now())
                     .build();
 

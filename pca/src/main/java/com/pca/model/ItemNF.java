@@ -31,10 +31,13 @@ public class ItemNF {
     @Column
     private Integer quantidade;
 
+    @Column
+    private Boolean garantia;
+    
+    @Column(name="garantia_meses")
+    private Integer garantiaMeses;
+
     @ManyToOne
     @JoinColumn(name="id_nf")
     private NotaFiscal notaFiscal;
-
-
-
 }

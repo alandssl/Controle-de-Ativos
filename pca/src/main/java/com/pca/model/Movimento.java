@@ -66,8 +66,9 @@ public class Movimento {
      @Column(name = "nome_arquivo")
     private String nomeArquivo;
 
-    @Column(name = "caminho_arquivo")
-    private String caminhoArquivo;
+    // @Lob
+    // @Column(columnDefinition= "LONGTEXT", name = "arquivo_base64")
+    // private String arquivoBase64;
 
     @Column(name = "tipo_arquivo")
     private String tipoArquivo;
@@ -201,14 +202,6 @@ public class Movimento {
 
     public void setNomeArquivo(String nomeArquivo) {
         this.nomeArquivo = nomeArquivo;
-    }
-
-    public String getCaminhoArquivo() {
-        return caminhoArquivo;
-    }
-
-    public void setCaminhoArquivo(String caminhoArquivo) {
-        this.caminhoArquivo = caminhoArquivo;
     }
 
     public String getTipoArquivo() {

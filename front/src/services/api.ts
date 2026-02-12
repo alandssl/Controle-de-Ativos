@@ -1,9 +1,9 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8080/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export const api = {
     get: async (endpoint: string) => {
         try {
-            const res = await fetch(`${API_BASE_URL}${endpoint}`, { cache: 'no-store' });
+            const res = await fetch(`${API_BASE_URL}/api${endpoint}`, { cache: 'no-store' });
             if (!res.ok) {
                 // Tentar analisar a mensagem de erro do corpo, se possível
                 try {
@@ -24,7 +24,7 @@ export const api = {
             const isFormData = data instanceof FormData;
             const headers: Record<string, string> = isFormData ? {} : { 'Content-Type': 'application/json' };
 
-            const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+            const res = await fetch(`${API_BASE_URL}/api${endpoint}`, {
                 method: 'POST',
                 headers: headers as any,
                 body: isFormData ? data : JSON.stringify(data),

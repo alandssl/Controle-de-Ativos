@@ -1,10 +1,20 @@
 package com.pca.controller;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*; // Importa todas as anotações
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping; // Importa todas as anotações
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.pca.model.Movimento;
@@ -57,6 +67,30 @@ public class MovimentoController {
                     return ResponseEntity.ok(service.salvar(existente));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/anexo/{id}")
+    public ResponseEntity<?> adicionarAnexo(@PathVariable Long id, @RequestParam("anexo") MultipartFile anexo) {
+        
+        if (anexo.isEmpty()) {
+            return ResponseEntity.badRequest().body("Arquivo vazio");
+        }
+        
+        try {
+            // Get the bytes from the MultipartFile
+            byte[] bytes = anexo.getBytes();
+            
+            
+            Movimento arquivoSalvo = service.salvarArquivo(id, anexo);
+
+            // Return the Base64 string in the response
+            return ResponseEntity.ok(arquivoSalvo);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Error processing file: " + e.getMessage());
+        }
+
     }
 
 }

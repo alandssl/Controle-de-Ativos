@@ -46,6 +46,12 @@ public class NotaFiscal {
     @Column(name = "valor_total", precision = 15, scale = 2)
     private BigDecimal valorTotal;
 
+    @Column(name = "garantia")
+    private Boolean garantia;
+
+    @Column(name = "data_validade_garantia")
+    private LocalDate dataValidadeGarantia;
+
     // --- Dados do fornecedor ---
     @Column(name = "fornecedor_nome", length = 150, nullable = false)
     private String fornecedorNome;

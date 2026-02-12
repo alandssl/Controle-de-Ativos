@@ -13,5 +13,7 @@ public record NotaFiscalRequest(
         String fornecedorCnpj,
         String fornecedorEndereco,
         String chaveAcesso,
-        String observacoes) {
+        String observacoes,
+        Boolean garantia,
+        LocalDate dataValidadeGarantia) {
 }

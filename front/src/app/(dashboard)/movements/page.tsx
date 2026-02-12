@@ -31,6 +31,9 @@ import { Movimentacao, Ativo, Colaborador } from '@/types';
 import { api, ENDPOINTS } from '@/services/api';
 
 
+const APP_IP = process.env.NEXT_PUBLIC_API_URL;
+
+
 function MovementsContent() {
     const searchParams = useSearchParams();
     const assetIdFilter = searchParams.get('assetId');
@@ -105,7 +108,7 @@ function MovementsContent() {
 
     const handleAbrirAnexo = (id: number) => {
         window.open(
-            `http://localhost:8080/api/movimentos/${id}/anexo`,
+            `${APP_IP}/movimentos/${id}/anexo`,
             '_blank'
         );
     };
@@ -129,7 +132,7 @@ function MovementsContent() {
 
             // Importante: NÃO definimos headers de Content-Type. 
             // O navegador faz isso automaticamente para Multipart/form-data incluindo o boundary.
-            const res = await fetch(`http://localhost:8080/api/movimentos/${selectedUploadId}/anexo`, {
+            const res = await fetch(`${APP_IP}/movimentos/${selectedUploadId}/anexo`, {
                 method: 'POST',
                 body: formData,
             });
@@ -330,7 +333,7 @@ function MovementsContent() {
                             <strong>Erro ao carregar dados:</strong> {error}
                         </div>
                         <div className="text-red-600 text-xs mt-1">
-                            Verifique se a API Java está rodando em http://localhost:8080.
+                            Verifique se a API Java está rodando em {APP_IP}.
                         </div>
                     </div>
                 )}

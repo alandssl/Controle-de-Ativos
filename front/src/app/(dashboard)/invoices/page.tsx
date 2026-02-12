@@ -36,6 +36,7 @@ export default function InvoicesPage() {
     const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
     const [visibleColumns, setVisibleColumns] = useState({
         numero: true,
+        garantia: true,
         fornecedor: true,
         data: true,
         valor: true,
@@ -91,6 +92,8 @@ export default function InvoicesPage() {
         switch (key) {
             case 'numero':
                 valueA = a.numero; valueB = b.numero; break;
+            case 'garantia':
+                valueA = a.garantia ? 1 : 0; valueB = b.garantia ? 1 : 0; break;
             case 'fornecedor':
                 valueA = a.fornecedorNome; valueB = b.fornecedorNome; break;
             case 'data':
@@ -174,6 +177,12 @@ export default function InvoicesPage() {
                                             <span>Número</span>
                                         </div>
                                     </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setVisibleColumns(prev => ({ ...prev, garantia: !prev.garantia }))}>
+                                        <div className="flex items-center gap-2">
+                                            <Checkbox checked={visibleColumns.garantia} readOnly />
+                                            <span>Garantia</span>
+                                        </div>
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setVisibleColumns(prev => ({ ...prev, fornecedor: !prev.fornecedor }))}>
                                         <div className="flex items-center gap-2">
                                             <Checkbox checked={visibleColumns.fornecedor} readOnly />
@@ -216,6 +225,17 @@ export default function InvoicesPage() {
                                             >
                                                 Número
                                                 <SortIcon column="numero" sortConfig={sortConfig} />
+                                            </div>
+                                        </TableHead>
+                                    )}
+                                    {visibleColumns.garantia && (
+                                        <TableHead className="w-[100px]">
+                                            <div
+                                                className="flex w-full justify-center items-center cursor-pointer select-none hover:text-foreground"
+                                                onClick={() => handleSort('garantia')}
+                                            >
+                                                Garantia
+                                                <SortIcon column="garantia" sortConfig={sortConfig} />
                                             </div>
                                         </TableHead>
                                     )}
@@ -284,6 +304,17 @@ export default function InvoicesPage() {
                                                         <Receipt className="h-4 w-4 text-muted-foreground" />
                                                         {nf.numero}
                                                     </div>
+                                                </TableCell>
+                                            )}
+                                            {visibleColumns.garantia && (
+                                                <TableCell className="text-center">
+                                                    {nf.garantia ? (
+                                                        <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                                                            Sim
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-xs">-</span>
+                                                    )}
                                                 </TableCell>
                                             )}
                                             {visibleColumns.fornecedor && (
