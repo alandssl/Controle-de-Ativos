@@ -1,159 +1,91 @@
-Entre os ativos controlados estão equipamentos como:
+# 🖥️ Sistema de Gestão de Ativos de TI
 
-computadores
+API backend desenvolvida com Java e Spring Boot para controle e gerenciamento de ativos de tecnologia da informação, como computadores, notebooks e periféricos.
 
-notebooks
+---
 
-monitores
+## 📖 Sobre o Projeto
 
-impressoras
+O sistema tem como objetivo centralizar o controle de equipamentos de TI, permitindo o registro, consulta e acompanhamento de informações relevantes dos ativos.
 
-periféricos
+Entre os ativos controlados estão:
+- Computadores  
+- Notebooks  
+- Monitores  
+- Impressoras  
+- Periféricos  
+- Outros equipamentos de TI  
 
-outros equipamentos de TI
+Cada ativo possui informações como categoria, data de aquisição e status.
 
-O sistema permite registrar, consultar e acompanhar informações importantes desses ativos, como categoria, data de aquisição e status.
+> ⚠️ Este projeto não foi iniciado por mim, porém fui responsável por dar continuidade ao desenvolvimento durante meu estágio, realizando melhorias, correções e implementações adicionais.
 
-Este projeto não foi iniciado por mim, porém tive a responsabilidade de dar continuidade ao desenvolvimento, realizando melhorias, correções e implementações adicionais durante meu estágio.
+---
 
-🎯 Objetivo do Sistema
+## 🎯 Objetivo
 
-O objetivo principal do sistema é centralizar o controle de equipamentos de TI, facilitando:
+O sistema foi desenvolvido para facilitar:
 
-📦 Cadastro de ativos
+- Cadastro de ativos  
+- Consulta de equipamentos  
+- Organização por categorias  
+- Controle de datas de aquisição  
+- Visibilidade dos recursos de TI  
 
-🔍 Consulta de equipamentos registrados
+Com isso, o setor de TI consegue manter um controle mais eficiente e organizado dos equipamentos.
 
-🏷 Organização por categorias
+---
 
-📅 Controle de datas de aquisição
+## 🚀 Funcionalidades
 
-📊 Melhor visibilidade dos recursos de TI da empresa
+- Cadastro de novos ativos  
+- Consulta de ativos cadastrados  
+- Organização por categorias  
+- Controle de informações dos equipamentos  
 
-Com isso, o setor de TI consegue manter um controle mais organizado dos equipamentos disponíveis e utilizados.
+---
 
-⚙️ Tecnologias Utilizadas
+## 🛠️ Tecnologias
 
-O projeto foi desenvolvido utilizando as seguintes tecnologias:
+### Backend
+- Java  
+- Spring Boot  
+- Spring Data JPA  
+- Hibernate  
 
-Backend
+### Banco de Dados
+- SQL Server  
 
-☕ Java
+### Ferramentas
+- Postman (testes de API)  
+- Git / GitHub  
+- IntelliJ / VSCode  
+- SQL Server Management Studio  
 
-🌱 Spring Boot
+---
 
-📦 Spring Data JPA
+## 🧠 Arquitetura
 
-🔐 Hibernate
+O projeto segue o padrão de API REST com arquitetura em camadas:
 
-Banco de Dados
+- **Controller** → Responsável pelos endpoints da API  
+- **Service** → Regras de negócio e validações  
+- **Repository** → Acesso ao banco de dados  
+- **Entity** → Representação das tabelas  
+- **DTO** → Transferência de dados  
 
-🗄 SQL Server
+---
 
-Ferramentas
+## 📡 Endpoints
 
-🧪 Postman para testes da API
+### Criar Ativo
+`POST /equipamentos`
 
-🖥 Git / GitHub
-
-🧠 IntelliJ / VSCode
-
-📊 SQL Server Management Studio
-
-🧠 Estrutura do Projeto
-
-O projeto segue uma arquitetura baseada em API REST, organizada em camadas para melhor separação de responsabilidades:
-
-controller
-service
-repository
-entity
-dto
-Controller
-
-Responsável por receber as requisições HTTP e expor os endpoints da API.
-
-Service
-
-Camada responsável pelas regras de negócio, validações e processamento das informações.
-
-Repository
-
-Camada responsável pela comunicação com o banco de dados utilizando Spring Data JPA.
-
-Entity
-
-Representação das tabelas do banco de dados dentro da aplicação.
-
-DTO
-
-Utilizado para transferência de dados entre as camadas da aplicação.
-
-📦 Funcionalidades do Sistema
-
-Atualmente o sistema possui funcionalidades como:
-
-cadastro de novos ativos
-
-consulta de ativos cadastrados
-
-organização por categorias
-
-controle de informações importantes dos equipamentos
-
-Essas funcionalidades permitem uma gestão mais organizada dos recursos de TI.
-
-🚧 Status do Projeto
-
-O projeto ainda está em desenvolvimento e possui algumas melhorias planejadas, como:
-
-melhoria nas validações de dados
-
-novas funcionalidades para gestão de ativos
-
-melhorias na estrutura e organização do código
-
-possíveis integrações com outros sistemas internos
-
-📡 Exemplos de Endpoints
-Criar Ativo
-POST /equipamentos
-
-Exemplo de JSON:
-
+**Exemplo de JSON:**
+```json
 {
   "categoria": "Notebook",
   "dataAquisicao": "2025-06-10",
   "descricao": "Notebook Dell Latitude",
   "ativo": true
 }
-Buscar Ativos
-GET /equipamentos
-📊 Benefícios do Sistema
-
-A utilização do sistema permite:
-
-melhor organização dos equipamentos de TI
-
-controle mais claro dos ativos disponíveis
-
-facilidade na consulta de informações
-
-apoio ao gerenciamento de infraestrutura de TI
-
-🚀 Contribuição no Projeto
-
-Durante meu estágio, participei da continuação e evolução deste projeto, realizando atividades como:
-
-manutenção e melhoria do código existente
-
-implementação de novas funcionalidades
-
-correção de erros
-
-testes da API
-
-organização da estrutura do projeto
-
-Essa experiência foi importante para desenvolver habilidades relacionadas à manutenção e evolução de sistemas já existentes, algo comum no ambiente corporativo.
-
